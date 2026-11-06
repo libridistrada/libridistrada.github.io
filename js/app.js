@@ -560,6 +560,7 @@
     if (p1 === 'mia') return mia();
     if (p1 === 'raccolta') return elenco(p2, RACCOLTE[p2]?.d || '', inRaccolta(p2));
     if (p1 === 'categoria') return elenco(p2, `${inCategoria(p2).length} libri`, inCategoria(p2));
+    if (p1 === 'admin') return window.LDSAdmin(app);
     if (p1 === 'pubblica') return window.LDSPubblica ? window.LDSPubblica(app) : testo('Pubblica il tuo libro', '<p>In arrivo.</p>');
     if (PAGINE[p1]) return testo(...PAGINE[p1]);
     home();
@@ -590,11 +591,23 @@
       return;
     }
     S.server = S.cat.server;
+    // solo in prova sul PC: ?server=http://127.0.0.1:8091 usa un server locale
+    if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+      const sv = new URLSearchParams(location.search).get('server') || sessionStorage.getItem('lds:server');
+      if (sv) { S.server = sv; sessionStorage.setItem('lds:server', sv); }
+    }
     S.libri = S.cat.libri;
     S.libri.forEach(b => S.per.set(b.id, b));
     const qs = new URLSearchParams(location.search);
     if (qs.has('qr')) { conta('qr'); history.replaceState(null, '', location.pathname + location.hash); } else conta('visita');
     controllaServer();
+    // libri approvati dall'admin dopo l'ultima pubblicazione del sito (Autori emergenti)
+    fetch(S.server + '/novita.json', { cache: 'no-store' }).then(r => r.json()).then(n => {
+      const nuovi = (n.libri || []).filter(b => !S.per.has(b.id));
+      if (!nuovi.length) return;
+      nuovi.forEach(b => { S.libri.push(b); S.per.set(b.id, b); });
+      if (!location.hash || location.hash === '#/' || location.hash.startsWith('#/raccolta')) vai();
+    }).catch(() => {});
     vai();
   }
 
