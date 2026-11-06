@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Libri di strada</title>
+  <meta name="description" content="Libri gratuiti da leggere sul telefono: classici, Roma, horror, esoterismo, manuali e autori emergenti. Inquadra, scegli, leggi.">
+  <meta name="theme-color" content="#0b0b0d">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:title" content="Libri di strada">
+  <meta property="og:description" content="Una libreria gratuita nascosta per le strade della città. Inquadra, scegli, leggi.">
+  <meta property="og:image" content="img/condivisione.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="img/icona.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="img/icona-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preload" href="font/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="font/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/lettore.css">
+</head>
+<body>
+  <header class="nav" id="nav">
+    <a class="logo" href="#/" aria-label="Libri di strada, home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="5" width="26" height="18" rx="3"/><path d="M8 11h16M8 16h10"/><path d="M16 23v6"/></svg>
+      <span>Libri <i>di</i> strada</span>
+    </a>
+    <nav class="links">
+      <a href="#/" data-nav="home">Home</a>
+      <a href="#/raccolte" data-nav="raccolte">Raccolte</a>
+      <a href="#/mia" data-nav="mia">La mia libreria</a>
+    </nav>
+    <button class="icon-btn" id="btn-cerca" aria-label="Cerca">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+    </button>
+  </header>
+
+  <div class="avviso" id="avviso" hidden></div>
+  <main id="app" tabindex="-1"></main>
+
+  <div class="cerca" id="cerca" hidden>
+    <div class="cerca-barra">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+      <input id="q" type="search" placeholder="Titolo, autore, argomento…" autocomplete="off" enterkeyhint="search" aria-label="Cerca un libro">
+      <button class="link" id="cerca-chiudi">Chiudi</button>
+    </div>
+    <div class="cerca-filtri" id="filtri"></div>
+    <div class="cerca-risultati" id="risultati"></div>
+  </div>
+
+  <div class="scheda" id="scheda" hidden role="dialog" aria-modal="true"></div>
+  <div class="lettore" id="lettore" hidden></div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <footer class="piede" id="piede">
+    <div class="piede-marchio">Libri <i>di</i> strada</div>
+    <p>Libri gratuiti e liberi da diritti, nascosti per le strade della città. Nessun account, nessuna pubblicità, nessun tracciamento.</p>
+    <nav>
+      <a href="#/info">Come funziona</a>
+      <a href="#/pubblica">Pubblica il tuo libro</a>
+      <a href="#/licenze">Licenze e fonti</a>
+      <a href="#/privacy">Privacy</a>
+    </nav>
+  </footer>
+
+  <script src="vendor/jszip.min.js"></script>
+  <script src="vendor/epub.min.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/lettore.js"></script>
+  <script src="js/pubblica.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+/* dentro le pagine del libro (iframe di epub.js) */
+@font-face { font-family: Literata; src: url(../font/literata-latin-wght-normal.woff2) format("woff2"); font-weight: 200 900; }
+@font-face { font-family: Literata; src: url(../font/literata-latin-wght-italic.woff2) format("woff2"); font-weight: 200 900; font-style: italic; }
+@font-face { font-family: OpenDyslexic; src: url(../font/opendyslexic-latin-400-normal.woff2) format("woff2"); font-weight: 400; }
+@font-face { font-family: OpenDyslexic; src: url(../font/opendyslexic-latin-700-normal.woff2) format("woff2"); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../font/inter-latin-wght-normal.woff2) format("woff2"); font-weight: 100 900; }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; hyphens: auto; -webkit-hyphens: auto; }
+p { text-align: justify; } img { max-width: 100%; height: auto; }
+a { color: inherit; }
+/* resti dell'interfaccia di Wikisource negli ePub esportati */
+.quality-msg-text, .quality-msg-imageleft, .quality-msg-imageright, #interProject, .ws-noexport, .noprint { display: none !important; }
