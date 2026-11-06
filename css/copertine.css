@@ -57,3 +57,18 @@
 .epoca img { width: 64px; height: 86px; object-fit: cover; border-radius: 6px; box-shadow: 0 8px 20px -8px #000; filter: saturate(.8); }
 .epoca figcaption { font-size: 12.5px; color: var(--muted); }
 .durata-testo { color: var(--gold); }
+
+/* copertina vera del libro: l'immagine, con il titolo in basso nello stesso stile delle altre */
+.poster.vera { background: var(--p1); }
+.poster.vera img { filter: saturate(1.05) contrast(1.05); }
+.poster.vera::after { background: linear-gradient(0deg, rgba(0, 0, 0, .9) 0%, rgba(0, 0, 0, .35) 42%, rgba(0, 0, 0, 0) 65%); }
+.poster.vera .pt { position: absolute; z-index: 3; inset: auto 8% 7.5% 8%; display: flex; flex-direction: column; gap: 3cqi; }
+.poster.vera .pt-t { font: 800 11.5cqi/.95 var(--ui); letter-spacing: -.03em; text-transform: uppercase; color: #fff; text-wrap: balance;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.poster.vera .pt-t.lungo { font-size: 9.5cqi; } .poster.vera .pt-t.lunghissimo { font-size: 8cqi; }
+.poster.vera .pt-a { font: 600 5.4cqi/1.2 var(--ui); color: rgba(255, 255, 255, .85); text-transform: none; letter-spacing: .02em; margin: 0; }
+.poster.vera .pt-a::before { content: ""; display: block; width: 12cqi; height: 1.1cqi; background: var(--p2); margin-bottom: 2.4cqi; }
+.poster.vera .durata { background: rgba(0, 0, 0, .45); color: #fff; }
+
+/* titoli: mai parole spezzate a metà; la misura la decide misuraTitolo() */
+.poster .pt-t { hyphens: manual !important; -webkit-hyphens: manual !important; overflow-wrap: normal !important; word-break: normal; -webkit-line-clamp: 6 !important; }

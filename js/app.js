@@ -7,6 +7,10 @@
 
   // raccolte a tema (in evidenza) e colori delle categorie: [scuro, medio, chiaro]
   const RACCOLTE = {
+    'Guide di oggi': { d: 'Intelligenza artificiale, sport, allenamento, cibo, spazio, musica: aggiornate ogni mese', c: ['#05051f', '#2d5bff', '#3affc3'],
+      i: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>' },
+    'Lingue': { d: 'Inglese, francese, tedesco, spagnolo, cinese, polacco e altre 20 lingue: corsi e frasari', c: ['#1f0533', '#c2187b', '#ffb703'],
+      i: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/></svg>' },
     'Autori emergenti': { d: 'Libri di oggi, regalati da chi li ha scritti', c: ['#3a2304', '#c27c0e', '#ffcf5c'],
       i: '<svg viewBox="0 0 24 24"><path d="M12 3l2.2 5.6L20 9.3l-4.5 3.9 1.4 5.8L12 16l-4.9 3 1.4-5.8L4 9.3l5.8-.7z"/></svg>' },
     'Roma': { d: 'Belli, Trilussa, Pascarella, Zanazzo: la città in dialetto, in versi e in cucina', c: ['#3d1206', '#c2461f', '#ff8a4c'],
@@ -31,9 +35,13 @@
     'Greci e latini': ['#1c1a14', '#6b6352', '#e8dcc0'], 'I best seller di sempre': ['#2a0c03', '#c2410c', '#ffd166'],
     'Opera e libretti': ['#22050f', '#8a1538', '#ff9ebb'], "Dialetti d'Italia": ['#0a2206', '#2f8a1f', '#a6ff6f'],
     'Religione e spiritualità': ['#1a1630', '#4b4499', '#d8cfff'],
+    'Corsi e professioni': ['#04172a', '#1565c0', '#64ffda'], 'Tecnologia e IA': ['#05051f', '#2d5bff', '#3affc3'],
+    'Sport e benessere': ['#1f1405', '#ff6b00', '#c6ff00'], 'Musica e spettacolo': ['#1f0533', '#8338ec', '#ff006e'],
+    'Lingue': ['#1f0533', '#c2187b', '#ffb703'], 'Guide di oggi': ['#05051f', '#2d5bff', '#3affc3'],
   };
   // i reparti della libreria, come entrando in una grande libreria
   const REPARTI = [
+    ['Di oggi', ['Tecnologia e IA', 'Sport e benessere', 'Musica e spettacolo', 'Corsi e professioni']],
     ['Generi', ['Avventura e pirati', 'Gialli e misteri', 'Fantascienza', 'Amore e passioni', 'Romanzi storici', 'Viaggi ed esplorazioni', 'Umorismo e satira']],
     ['Classici', ['I best seller di sempre', 'Classici stranieri', 'Greci e latini']],
     ['Narrativa e poesia', ['Romanzi', 'Racconti e novelle', 'Poesia', 'Teatro', 'Lettere']],
@@ -109,6 +117,8 @@
     ['#3d348b', '#ff8fab', '#ffffff'], ['#011627', '#2ec4b6', '#fdfffc'], ['#fb5607', '#ffe8d6', '#2b0d00'], ['#8338ec', '#3affc3', '#ffffff'],
   ];
   const TAVOLOZZE_TEMA = {
+    'Guide di oggi': [['#2d5bff', '#3affc3', '#ffffff'], ['#0b0b0b', '#c6ff00', '#ffffff'], ['#ff006e', '#ffbe0b', '#ffffff'], ['#8338ec', '#3affc3', '#ffffff'], ['#3affc3', '#05051f', '#05051f']],
+    'Lingue': [['#c2187b', '#ffb703', '#ffffff'], ['#ffb703', '#c2187b', '#1f0533'], ['#023e8a', '#ff5d8f', '#ffffff'], ['#06d6a0', '#073b4c', '#073b4c']],
     'Horror e fantastico': [['#0b0b0b', '#ff1f3d', '#f2f2f2'], ['#120a1f', '#9dff00', '#eeeeee'], ['#1a0005', '#ff4d6d', '#ffe5ec'], ['#000000', '#ff7b00', '#fff3e6']],
     'Roma': [['#e2552d', '#2b1a12', '#ffe9d6'], ['#f2a65a', '#7a1e12', '#2b0f08'], ['#ffd166', '#c0392b', '#1b0d08'], ['#7a1e12', '#ffb26b', '#fff1e3']],
     'Esoterismo e mistero': [['#1b0f3a', '#ffd166', '#f3e9ff'], ['#3c1e70', '#2ee6d6', '#ffffff'], ['#0b0620', '#c77dff', '#f7f0ff']],
@@ -128,6 +138,14 @@
     const min = Math.max(5, Math.round(m / 5) * 5);
     return min < 60 ? `${min} min` : min < 600 ? `${Math.round(min / 60)} h` : `${Math.round(min / 60)} h+`;
   };
+  // dimensione del titolo: la parola più lunga deve stare intera sulla riga (niente «CRIPTOVA-LUTE»)
+  function misuraTitolo(t, max = 13.5) {
+    const parole = t.toUpperCase().split(/\s+/).filter(Boolean);
+    const lunga = Math.max(...parole.map(p => p.length), 1);
+    const perParola = 82 / (lunga * 0.64);              // larghezza utile ~82% della copertina, lettere ~0,64 em
+    const perTotale = t.length > 60 ? 7 : t.length > 42 ? 8.4 : t.length > 26 ? 10.5 : max;
+    return Math.max(5.6, Math.min(max, perParola, perTotale)).toFixed(1);
+  }
   function copertina(b, opt = {}) {
     const [p1, p2, p3] = tavolozza(b);
     const h = hash(b.id);
@@ -136,10 +154,17 @@
     const extra = (b.nuovo ? '<span class="bollino">Nuovo</span>' : '') + (pr > .01 ? `<span class="barra-lettura"><i style="width:${Math.round(pr * 100)}%"></i></span>` : '');
     const titolo = b.t.replace(/\s*\([^)]*\)\s*$/, '');   // via le note di edizione: «Fosca (1869)» -> «Fosca»
     const d = durata(b);
+    if (b.cov === 1) {   // il libro ha una copertina o un'illustrazione sua: si vede quella
+      return `<span class="poster con-immagine vera" style="--p1:${p1};--p2:${p2};--p3:${p3}"><img src="copertine/${esc(b.id)}.webp" alt="" loading="lazy" decoding="async"
+        onerror="this.parentNode.className='poster moderna f${(h >> 4) % 8}';this.remove()"><span class="forma"></span>
+        ${d ? `<span class="durata">${d}</span>` : ''}
+        <span class="pt"><span class="pt-t" style="font-size:${misuraTitolo(titolo)}cqi">${esc(titolo)}</span><span class="pt-a">${esc(autori(b))}</span></span>
+        <span class="costola"></span><span class="luce"></span>${extra}</span>`;
+    }
     return `<span class="poster moderna f${(h >> 4) % 8}" style="--p1:${p1};--p2:${p2};--p3:${p3}">
       <span class="forma"></span>
       ${d ? `<span class="durata">${d}</span>` : ''}
-      <span class="pt"><span class="pt-t ${lt}">${esc(titolo)}</span><span class="pt-a">${esc(autori(b))}</span></span>
+      <span class="pt"><span class="pt-t" style="font-size:${misuraTitolo(titolo)}cqi">${esc(titolo)}</span><span class="pt-a">${esc(autori(b))}</span></span>
       <span class="costola"></span><span class="luce"></span>${extra}</span>`;
   }
   // i colori per aloni e sfondi seguono la copertina
@@ -375,6 +400,7 @@
     const sfondo = `background:linear-gradient(135deg, ${tavolozza(b)[0]}, ${tavolozza(b)[1]})`;
     const scaricabile = S.online !== false || b.r;
     el.innerHTML = `<div class="scheda-foglio">
+      <a class="a-casa" href="#/" aria-label="Torna alla home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg> Home</a>
       <button class="chiudi" aria-label="Chiudi">${ico.x}</button>
       <div class="scheda-testa"><div class="sfondo" style="${sfondo}"></div>${copertina(b)}
         <div><h1>${esc(b.t)}</h1>
@@ -428,7 +454,8 @@
     if (el.hidden) return;
     el.hidden = true; el.innerHTML = '';
     document.body.classList.remove('bloccato');
-    if (location.hash.startsWith('#/libro/')) history.length > 1 && S.dentro ? history.back() : (location.hash = '#/');
+    // torna sempre alla pagina di partenza (home, raccolta, ricerca), mai dentro il lettore
+    if (location.hash.startsWith('#/libro/')) location.hash = S.base || '#/';
   }
 
   // ---------------------------------------------------------------- file dei libri
@@ -482,6 +509,7 @@
   }
   $('#btn-cerca').onclick = apriCerca;
   $('#cerca-chiudi').onclick = chiudiCerca;
+  $('#cerca-home').onclick = () => { chiudiCerca(); };
   let qT; $('#q').addEventListener('input', () => { clearTimeout(qT); qT = setTimeout(cerca, 120); });
   $('#risultati').addEventListener('click', e => { if (e.target.closest('a.libro')) chiudiCerca(); });
 
@@ -524,7 +552,8 @@
       conta('lettura', b.id);
       return window.LDSLettore.apri(b);
     }
-    window.scrollTo(0, 0);
+    S.base = location.hash || '#/';   // ultima pagina «normale»: la X della scheda torna qui
+    if (S.base !== S.ultimaBase) { window.scrollTo(0, 0); S.ultimaBase = S.base; }
     evidenzia(p1 || 'home');
     if (!p1) return home();
     if (p1 === 'raccolte') return raccolte();
@@ -569,7 +598,7 @@
     vai();
   }
 
-  window.LDS = { S, esc, toast, conta, datiEpub, db, store, salvaSulTelefono, ico, chiudiScheda };
+  window.LDS = { S, esc, toast, conta, datiEpub, db, store, salvaSulTelefono, ico, chiudiScheda, copertina, tavolozza, durata, autori };
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
   avvio();
 })();

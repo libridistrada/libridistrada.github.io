@@ -19,6 +19,7 @@
 
   const icone = {
     indietro: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
+    casa: '<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
     indice: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
     segno: '<svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-6-4-6 4z"/></svg>',
     aa: '<svg viewBox="0 0 24 24"><path d="M3 19l5-14 5 14M5 14h6M15 19l3.5-9 3.5 9M16 16h5"/></svg>',
@@ -34,6 +35,7 @@
       <div class="lt-barra lt-su">
         <button class="lt-btn" data-a="esci" aria-label="Chiudi il libro">${icone.indietro}</button>
         <div class="lt-titolo"><b>${esc(b.t)}</b><span id="lt-cap"></span></div>
+        <a class="lt-btn" href="#/" aria-label="Torna alla home">${icone.casa}</a>
         <button class="lt-btn" data-a="indice" aria-label="Indice">${icone.indice}</button>
         <button class="lt-btn" data-a="segno" aria-label="Segnalibro">${icone.segno}</button>
         <button class="lt-btn" data-a="voce" aria-label="Leggi ad alta voce">${icone.voce}</button>
