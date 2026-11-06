@@ -1,7 +1,7 @@
 /* Libri di strada: funziona anche offline. Guscio in cache; catalogo e copertine aggiornati in sottofondo;
    i libri salvati stanno in IndexedDB (li gestisce la pagina), quelli dell'HP non passano da qui. */
-const V = 'lds-1';
-const GUSCIO = ['./', 'index.html', 'css/app.css', 'css/lettore.css', 'css/lettore-libro.css', 'js/app.js', 'js/lettore.js', 'js/pubblica.js',
+const V = 'lds-2';
+const GUSCIO = ['./', 'index.html', 'css/app.css', 'css/lettore.css', 'css/effetti.css', 'css/lettore-libro.css', 'js/app.js', 'js/lettore.js', 'js/pubblica.js',
   'vendor/epub.min.js', 'vendor/jszip.min.js', 'manifest.webmanifest', 'img/icona.svg',
   'font/fraunces-latin-wght-normal.woff2', 'font/inter-latin-wght-normal.woff2', 'font/literata-latin-wght-normal.woff2'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(GUSCIO)).then(() => self.skipWaiting())); });

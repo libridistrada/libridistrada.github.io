@@ -7,19 +7,40 @@
 
   // raccolte a tema (in evidenza) e colori delle categorie: [scuro, medio, chiaro]
   const RACCOLTE = {
-    'Autori emergenti': { d: 'Libri di oggi, regalati da chi li ha scritti', c: ['#2a1d05', '#8a6215', '#e9b44c'] },
-    'Roma': { d: 'Belli, Trilussa, Pascarella, Zanazzo: la città in dialetto, in versi e in cucina', c: ['#2b0f08', '#8f3a22', '#e0703f'] },
-    'Horror e fantastico': { d: 'Vampiri, spettri e notti scapigliate', c: ['#120406', '#5c0f1a', '#a31d2e'] },
-    'Esoterismo e mistero': { d: 'Magia, alchimia, cabala e filosofia occulta', c: ['#0d0820', '#3b2a78', '#7b5fd6'] },
-    'Lavoro e formazione': { d: 'Manuali, corsi e trattati per imparare un mestiere', c: ['#04171a', '#16564f', '#33a08d'] },
+    'Autori emergenti': { d: 'Libri di oggi, regalati da chi li ha scritti', c: ['#3a2304', '#c27c0e', '#ffcf5c'],
+      i: '<svg viewBox="0 0 24 24"><path d="M12 3l2.2 5.6L20 9.3l-4.5 3.9 1.4 5.8L12 16l-4.9 3 1.4-5.8L4 9.3l5.8-.7z"/></svg>' },
+    'Roma': { d: 'Belli, Trilussa, Pascarella, Zanazzo: la città in dialetto, in versi e in cucina', c: ['#3d1206', '#c2461f', '#ff8a4c'],
+      i: '<svg viewBox="0 0 24 24"><path d="M3 20h18M4 20V9h16v11M4 9l8-5 8 5M7 20v-6a2 2 0 0 1 4 0v6M13 20v-6a2 2 0 0 1 4 0v6"/></svg>' },
+    'Horror e fantastico': { d: 'Vampiri, spettri e notti scapigliate', c: ['#1a0307', '#7d0d22', '#ff3355'],
+      i: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M15 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/></svg>' },
+    'Esoterismo e mistero': { d: 'Magia, alchimia, cabala e filosofia occulta', c: ['#120a33', '#4b2fb0', '#a98bff'],
+      i: '<svg viewBox="0 0 24 24"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4 4l1.5 1.5M20 4l-1.5 1.5"/></svg>' },
+    'Lavoro e formazione': { d: 'Manuali, corsi e trattati per imparare un mestiere', c: ['#032224', '#0f7c6c', '#3fe0bf'],
+      i: '<svg viewBox="0 0 24 24"><path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11.5V16c0 1.5 2.2 3 5 3s5-1.5 5-3v-4.5M21 9v6"/></svg>' },
   };
   const CATEGORIE = {
-    'Romanzi': ['#14100c', '#5a3a22', '#a8743f'], 'Racconti e novelle': ['#0d1418', '#24485a', '#4f8fae'],
-    'Poesia': ['#160d16', '#5a2a52', '#b05c9f'], 'Teatro': ['#170c0b', '#6b1f1a', '#c2452f'],
-    'Ragazzi e fiabe': ['#0e1609', '#3a6324', '#7fb34d'], 'Storia e biografie': ['#14120a', '#5b5124', '#b29f45'],
-    'Saggi e pensiero': ['#0b0f17', '#28375e', '#5872b8'], 'Lettere': ['#15100f', '#5d3b33', '#b07a67'],
-    'Scienza e curiosità': ['#06141a', '#1d5560', '#3fa2b0'], 'Lavoro e formazione': ['#04171a', '#16564f', '#33a08d'],
+    'Romanzi': ['#2a1505', '#a5531a', '#ffa552'], 'Racconti e novelle': ['#04202a', '#11708f', '#4fd1ff'],
+    'Poesia': ['#2a0627', '#a01d7f', '#ff6fd8'], 'Teatro': ['#2a0505', '#b0182b', '#ffb03b'],
+    'Ragazzi e fiabe': ['#0d2a05', '#4f9a14', '#c6ff5c'], 'Storia e biografie': ['#2a2105', '#9a7a12', '#ffe066'],
+    'Saggi e pensiero': ['#060f2e', '#2747b5', '#7aa2ff'], 'Lettere': ['#2e0a14', '#b03b5c', '#ff9eb5'],
+    'Scienza e curiosità': ['#022427', '#0b8a96', '#5ff2ff'], 'Lavoro e formazione': ['#032224', '#0f7c6c', '#3fe0bf'],
+    'Avventura e pirati': ['#2a1803', '#b3620b', '#ffb547'], 'Gialli e misteri': ['#0b0b14', '#2e2e52', '#8f8fff'],
+    'Fantascienza': ['#03162a', '#0d5bb3', '#43e0ff'], 'Amore e passioni': ['#2e0516', '#b3164f', '#ff7aa8'],
+    'Romanzi storici': ['#251a0a', '#7d5a23', '#e8bf6a'], 'Viaggi ed esplorazioni': ['#03211c', '#0f7a5e', '#6ff0c2'],
+    'Umorismo e satira': ['#2a2203', '#b39a0b', '#fff15c'], 'Classici stranieri': ['#120a24', '#5a3aa6', '#c4a6ff'],
+    'Greci e latini': ['#1c1a14', '#6b6352', '#e8dcc0'], 'I best seller di sempre': ['#2a0c03', '#c2410c', '#ffd166'],
+    'Opera e libretti': ['#22050f', '#8a1538', '#ff9ebb'], "Dialetti d'Italia": ['#0a2206', '#2f8a1f', '#a6ff6f'],
+    'Religione e spiritualità': ['#1a1630', '#4b4499', '#d8cfff'],
   };
+  // i reparti della libreria, come entrando in una grande libreria
+  const REPARTI = [
+    ['Generi', ['Avventura e pirati', 'Gialli e misteri', 'Fantascienza', 'Amore e passioni', 'Romanzi storici', 'Viaggi ed esplorazioni', 'Umorismo e satira']],
+    ['Classici', ['I best seller di sempre', 'Classici stranieri', 'Greci e latini']],
+    ['Narrativa e poesia', ['Romanzi', 'Racconti e novelle', 'Poesia', 'Teatro', 'Lettere']],
+    ['Musica, dialetti e spirito', ['Opera e libretti', "Dialetti d'Italia", 'Religione e spiritualità']],
+    ['Sapere', ['Storia e biografie', 'Saggi e pensiero', 'Scienza e curiosità', 'Lavoro e formazione']],
+    ['Ragazzi', ['Ragazzi e fiabe']],
+  ];
   const FREGI = [
     '<svg viewBox="0 0 60 30"><path d="M2 15h18M40 15h18M30 4c-6 6-6 16 0 22 6-6 6-16 0-22z"/><circle cx="30" cy="15" r="2.4"/></svg>',
     '<svg viewBox="0 0 60 30"><path d="M4 22c8-14 18-14 26 0 8-14 18-14 26 0"/><path d="M14 8h32"/></svg>',
@@ -63,7 +84,7 @@
   let toastT;
   function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2600); }
   const hash = s => { let h = 2166136261; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
-  const colori = b => (b.s && b.s[0] && RACCOLTE[b.s[0]]?.c) || CATEGORIE[b.c] || ['#151515', '#3a3a3a', '#777'];
+  const colori = b => (b.s && b.s[0] && RACCOLTE[b.s[0]]?.c) || (b.sf && b.sf[0] && CATEGORIE[b.sf[0]]) || CATEGORIE[b.c] || ['#151515', '#3a3a3a', '#777'];
   const autori = b => (b.a || []).join(', ');
   const mb = n => n > 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB';
   const vita = b => b.n || b.m ? ` (${b.n || '?'}–${b.m || '?'})` : '';
@@ -85,15 +106,18 @@
     const lt = b.t.length > 46 ? 'lunghissimo' : b.t.length > 26 ? 'lungo' : '';
     const pr = opt.progresso ? progresso(b.id) : 0;
     const extra = (b.nuovo ? '<span class="bollino">Nuovo</span>' : '') + (pr > .01 ? `<span class="barra-lettura"><i style="width:${Math.round(pr * 100)}%"></i></span>` : '');
-    const testo = `<span class="pt"><span class="pt-a">${esc(autori(b))}</span><span class="pt-t ${lt}">${esc(b.t)}</span></span>`;
+    const testo = `<span class="pt"><span class="pt-a">${esc(autori(b))}</span><span class="pt-t ${lt}">${esc(b.t)}</span></span>`
+      + '<span class="costola"></span><span class="luce"></span>';
     if (b.cov) {
       const img = b.cov === 1 ? b.id : b.cov;   // 1 = immagine del libro, altrimenti il ritratto dell'autore
       return `<span class="poster con-immagine${b.cov === 1 ? '' : ' ritratto'}" style="--c0:${c0};--c1:${c1};--c2:${c2}"><img src="copertine/${esc(img)}.webp" alt="" loading="lazy" decoding="async"
         onerror="this.parentNode.classList.remove('con-immagine');this.parentNode.classList.add('disegnata');this.remove()">${testo}${extra}</span>`;
     }
     const h = hash(b.id);
-    const varia = `filter:hue-rotate(${(h % 29) - 14}deg) saturate(${0.85 + (h >> 5) % 30 / 100});background-position:${(h >> 9) % 100}% 0`;
-    return `<span class="poster disegnata" style="--c0:${c0};--c1:${c1};--c2:${c2};${varia}"><span class="marchio">LdS</span>
+    const varia = `filter:hue-rotate(${(h % 41) - 20}deg) saturate(${0.9 + (h >> 5) % 40 / 100});background-position:${(h >> 9) % 100}% 0`;
+    const iniziale = (b.t.replace(/^(il|lo|la|i|gli|le|l'|un|uno|una|un')\s*/i, '').match(/[A-Za-zÀ-ÿ]/) || ['L'])[0].toUpperCase();
+    return `<span class="poster disegnata" style="--c0:${c0};--c1:${c1};--c2:${c2};${varia}"><span class="motivo m${(h >> 3) % 6}"></span>
+      <span class="iniziale">${esc(iniziale)}</span><span class="marchio">LdS</span>
       <span class="fregio">${FREGI[hash(b.id) % FREGI.length]}</span>${testo}${extra}</span>`;
   }
   const tessera = (b, opt) => `<a class="libro" href="#/libro/${encodeURIComponent(b.id)}" aria-label="${esc(b.t)}, di ${esc(autori(b))}">
@@ -101,11 +125,13 @@
 
   function fila(titolo, libri, opt = {}) {
     if (!libri.length) return '';
-    return `<section class="fila" style="--c:${opt.colore || 'var(--accent)'}">
+    return `<section class="fila${opt.top ? ' top' : ''}" style="--c:${opt.colore || 'var(--accent)'}">
       <div class="fila-testa"><h2><i class="punto"></i>${esc(titolo)}</h2>${opt.sotto ? `<span class="sotto">${esc(opt.sotto)}</span>` : ''}
         ${opt.link ? `<a class="tutti" href="${opt.link}">Vedi tutti ${ico.avanti}</a>` : ''}</div>
       <div class="scorri"><button class="freccia sx" aria-label="Indietro">${ico.freccia}</button>
-        <div class="binario">${libri.slice(0, opt.max || 30).map(b => tessera(b, opt)).join('')}</div>
+        <div class="binario">${libri.slice(0, opt.max || 30).map((b, i) => opt.top
+          ? `<div class="posto" style="--i:${i}"><span class="numero" aria-hidden="true">${i + 1}</span>${tessera(b, opt)}</div>`
+          : tessera(b, opt).replace('<a class="libro"', `<a class="libro" style="--i:${Math.min(i, 12)}"`)).join('')}</div>
         <button class="freccia dx" aria-label="Avanti">${ico.freccia}</button></div></section>`;
   }
   function attivaFrecce(root) {
@@ -121,7 +147,9 @@
   // ---------------------------------------------------------------- dati
   const ordina = (a, b) => (b.k - a.k) || ((b.v || 0) - (a.v || 0));
   const inRaccolta = n => S.libri.filter(b => (b.s || []).includes(n)).sort(ordina);
-  const inCategoria = n => S.libri.filter(b => b.c === n).sort(ordina);
+  const inCategoria = n => n === 'I best seller di sempre'
+    ? [...S.libri].filter(b => b.v).sort((a, b) => b.v - a.v).slice(0, 40)
+    : S.libri.filter(b => b.c === n || (b.sf || []).includes(n)).sort(ordina);
 
   function libroDelGiorno() {
     const cand = S.libri.filter(b => b.tr && (b.k || (b.s || []).length));
@@ -131,39 +159,140 @@
   }
 
   // ---------------------------------------------------------------- pagine
+  function vetrina() {
+    // 5 libri: prima quelli con immagine e trama, uno per raccolta, poi i grandi classici; cambiano ogni giorno
+    const giorno = Math.floor(Date.now() / 864e5);
+    const pesca = arr => arr.length ? arr[(hash(String(giorno)) + arr.length) % arr.length] : null;
+    const bello = b => b.cov && (b.tr || b.inc);
+    const scelti = [];
+    for (const n of Object.keys(RACCOLTE)) {
+      const x = pesca(inRaccolta(n).filter(bello).slice(0, 12));
+      if (x && !scelti.includes(x)) scelti.push(x);
+    }
+    for (const b of S.libri.filter(b => bello(b) && b.k).sort(ordina)) { if (scelti.length >= 5) break; if (!scelti.includes(b)) scelti.push(b); }
+    for (const b of S.libri.sort(ordina)) { if (scelti.length >= 5) break; if (!scelti.includes(b)) scelti.push(b); }
+    return scelti.slice(0, 5);
+  }
+
+  function slide(h, i) {
+    const img = h.cov ? `copertine/${h.cov === 1 ? h.id : h.cov}.webp` : '';
+    const [c0, , c2] = colori(h);
+    return `<div class="slide hero${i === 0 ? ' on' : ''}" data-a1="${c2}" data-a2="${colori(h)[1]}">
+      ${img ? `<div class="hero-sfondo" style="background-image:url('${esc(img)}')"></div>` : `<div class="hero-sfondo" style="background:radial-gradient(circle at 70% 30%, ${c2}, ${c0})"></div>`}
+      <div class="hero-dentro"><div class="hero-testo">
+        <div class="occhiello">${i === 0 ? 'Il libro di oggi' : 'Da non perdere'}${h.s && h.s[0] ? ' · ' + esc(h.s[0]) : ' · ' + esc(h.c)}</div>
+        <h1>${esc(h.t)}</h1>
+        <p class="autore"><b>${esc(autori(h))}</b>${h.y ? ' · ' + h.y : ''}</p>
+        ${h.tr || h.inc ? `<p class="trama">${esc(h.tr || h.inc)}</p>` : '<p class="trama"></p>'}
+        <div class="bottoni"><a class="btn primario" href="#/leggi/${encodeURIComponent(h.id)}">${ico.play} Leggi ora</a>
+          <a class="btn secondario" href="#/libro/${encodeURIComponent(h.id)}">${ico.info} Dettagli</a></div>
+      </div>${copertina(h)}</div></div>`;
+  }
+
+  let giroVetrina;
+  function avviaVetrina(root) {
+    const v = root.querySelector('.vetrina');
+    if (!v) return;
+    const slides = [...v.querySelectorAll('.slide')], punti = [...v.querySelectorAll('.vetrina-punti button')];
+    const DURATA = 8000;
+    let k = 0, pausa = false, t0 = Date.now(), resto = DURATA;
+    const vai = n => {
+      slides[k].classList.remove('on'); punti[k].classList.remove('on');
+      punti.forEach((p, i) => p.classList.toggle('fatto', i < n));
+      k = (n + slides.length) % slides.length;
+      slides[k].classList.add('on');
+      void punti[k].offsetWidth; punti[k].classList.add('on');
+      v.style.setProperty('--a1', slides[k].dataset.a1); v.style.setProperty('--a2', slides[k].dataset.a2);
+      t0 = Date.now(); resto = DURATA;
+    };
+    v.style.setProperty('--a1', slides[0].dataset.a1); v.style.setProperty('--a2', slides[0].dataset.a2);
+    v.style.setProperty('--durata', DURATA + 'ms');
+    punti[0].classList.add('on');
+    punti.forEach((p, i) => (p.onclick = () => vai(i)));
+    v.addEventListener('mouseenter', () => { pausa = true; resto -= Date.now() - t0; });
+    v.addEventListener('mouseleave', () => { pausa = false; t0 = Date.now(); });
+    let x0 = null;
+    v.addEventListener('touchstart', e => (x0 = e.touches[0].clientX), { passive: true });
+    v.addEventListener('touchend', e => { if (x0 !== null && Math.abs(e.changedTouches[0].clientX - x0) > 50) vai(k + (e.changedTouches[0].clientX < x0 ? 1 : -1)); x0 = null; }, { passive: true });
+    clearInterval(giroVetrina);
+    giroVetrina = setInterval(() => { if (!document.body.contains(v)) return clearInterval(giroVetrina);
+      if (!pausa && !document.hidden && Date.now() - t0 >= resto) vai(k + 1); }, 250);
+  }
+
   function home() {
     document.title = 'Libri di strada';
-    const h = libroDelGiorno();
+    const vv = vetrina();
     const inLettura = Object.entries(store.get('pos', {})).sort((a, b) => b[1].t - a[1].t).map(([id]) => S.per.get(id)).filter(Boolean);
     const nuovi = S.libri.filter(b => b.nuovo).sort((a, b) => (b.agg || '').localeCompare(a.agg || ''));
     const piuLetti = [...S.libri].sort((a, b) => (b.v || 0) - (a.v || 0));
     let html = '';
-    if (h) {
-      const sfondo = h.cov ? `copertine/${h.cov === 1 ? h.id : h.cov}.webp` : '';
-      html += `<section class="hero">${sfondo ? `<div class="hero-sfondo" style="background-image:url('${esc(sfondo)}')"></div>` : `<div class="hero-sfondo" style="background:radial-gradient(circle at 70% 30%, ${colori(h)[2]}, ${colori(h)[0]})"></div>`}
-        <div class="hero-grana"></div>
-        <div class="hero-dentro"><div class="hero-testo">
-          <div class="occhiello">Il libro di oggi${h.s && h.s[0] ? ' · ' + esc(h.s[0]) : ''}</div>
-          <h1>${esc(h.t)}</h1>
-          <p class="autore"><b>${esc(autori(h))}</b>${h.y ? ' · ' + h.y : ''}</p>
-          ${h.tr || h.inc ? `<p class="trama">${esc(h.tr || h.inc)}</p>` : ''}
-          <div class="bottoni"><a class="btn primario" href="#/leggi/${encodeURIComponent(h.id)}">${ico.play} Leggi ora</a>
-            <a class="btn secondario" href="#/libro/${encodeURIComponent(h.id)}">${ico.info} Dettagli</a></div>
-        </div>${copertina(h)}</div></section>`;
+    if (vv.length) {
+      html += `<section class="vetrina"><div class="aurora"><i></i><i></i><i></i></div>${vv.map(slide).join('')}<div class="hero-grana"></div>
+        <div class="vetrina-punti">${vv.map((b, i) => `<button aria-label="${esc(b.t)}"><i></i></button>`).join('')}</div></section>`;
     }
+    html += `<nav class="porte" aria-label="Raccolte">${Object.entries(RACCOLTE).map(([n, r]) => `<a class="porta" href="#/raccolta/${encodeURIComponent(n)}"
+      style="--c0:${r.c[0]};--c1:${r.c[1]};--c2:${r.c[2]}">${r.i}<b>${esc(n)}</b><span>${inRaccolta(n).length || 'Presto'} libri</span></a>`).join('')}</nav>`;
     html += '<div class="file">';
     html += fila('Continua a leggere', inLettura, { progresso: true, colore: 'var(--gold)' });
     if (nuovi.length) html += fila('Appena arrivati', nuovi, { colore: 'var(--gold)' });
-    for (const [n, r] of Object.entries(RACCOLTE)) {
+    const raccolte = Object.entries(RACCOLTE);
+    raccolte.forEach(([n, r], i) => {
       html += fila(n, inRaccolta(n), { sotto: r.d, colore: r.c[2], link: '#/raccolta/' + encodeURIComponent(n) });
-    }
-    html += fila('I più letti', piuLetti, { colore: 'var(--accent)' });
-    for (const n of Object.keys(CATEGORIE)) {
-      html += fila(n, inCategoria(n), { colore: CATEGORIE[n][2], link: '#/categoria/' + encodeURIComponent(n) });
+      if (i === 1) html += fila('I 10 più letti', piuLetti, { colore: 'var(--gold)', top: true, max: 10 });
+    });
+    for (const [, scaffali] of REPARTI) {
+      for (const n of scaffali) {
+        if (RACCOLTE[n]) continue;
+        html += fila(n, inCategoria(n), { colore: CATEGORIE[n][2], link: '#/categoria/' + encodeURIComponent(n) });
+      }
     }
     html += '</div>';
     app.innerHTML = html;
     attivaFrecce(app);
+    avviaVetrina(app);
+    rivela(app);
+  }
+
+  // ---------------------------------------------------------------- effetti
+  let osservatore;
+  function rivela(root) {
+    if (!('IntersectionObserver' in window)) return root.querySelectorAll('.fila').forEach(f => f.classList.add('vista'));
+    osservatore = osservatore || new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vista'); osservatore.unobserve(e.target); } }),
+      { rootMargin: '0px 0px -8% 0px', threshold: .05 });
+    root.querySelectorAll('.fila:not(.vista)').forEach(f => osservatore.observe(f));
+  }
+  // inclinazione 3D e luce che segue il mouse
+  document.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    const p = e.target.closest && e.target.closest('.libro .poster');
+    if (!p) return;
+    const r = p.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    p.style.setProperty('--ry', ((x - .5) * 14).toFixed(1) + 'deg');
+    p.style.setProperty('--rx', ((.5 - y) * 12).toFixed(1) + 'deg');
+    p.style.setProperty('--mx', (x * 100).toFixed(0) + '%');
+    p.style.setProperty('--my', (y * 100).toFixed(0) + '%');
+  }, { passive: true });
+  // colore dominante di un'immagine (per lo sfondo della scheda)
+  function coloreDominante(src) {
+    return new Promise(res => {
+      const im = new Image();
+      im.onload = () => {
+        try {
+          const c = document.createElement('canvas'); c.width = c.height = 24;
+          const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0, 24, 24);
+          const d = x.getImageData(0, 0, 24, 24).data;
+          let r = 0, g = 0, b = 0, n = 0;
+          for (let i = 0; i < d.length; i += 4) {
+            const mx = Math.max(d[i], d[i + 1], d[i + 2]), mn = Math.min(d[i], d[i + 1], d[i + 2]);
+            const w = (mx - mn) / 255 + .05;   // pesano di più i colori vivi
+            r += d[i] * w; g += d[i + 1] * w; b += d[i + 2] * w; n += w;
+          }
+          res(`rgb(${Math.round(r / n)},${Math.round(g / n)},${Math.round(b / n)})`);
+        } catch { res(null); }
+      };
+      im.onerror = () => res(null);
+      im.src = src;
+    });
   }
 
   function elenco(titolo, intro, libri) {
@@ -177,10 +306,11 @@
     document.title = 'Raccolte · Libri di strada';
     const t = (n, d, c) => `<a class="raccolta-tessera" href="#/${RACCOLTE[n] ? 'raccolta' : 'categoria'}/${encodeURIComponent(n)}" style="--c0:${c[0]};--c1:${c[1]};--c2:${c[2]}">
       <b>${esc(n)}</b><span>${esc(d)}</span></a>`;
-    app.innerHTML = `<div class="pagina"><h1>Raccolte</h1><p class="intro">Scegli da dove cominciare. Tutti i libri sono gratuiti, per sempre.</p>
-      <div class="raccolte-elenco">${Object.entries(RACCOLTE).map(([n, r]) => t(n, `${inRaccolta(n).length} libri · ${r.d}`, r.c)).join('')}</div>
-      <h2 class="fila-testa" style="padding:0;margin:40px 0 16px;font:600 24px/1.2 var(--display)">Per genere</h2>
-      <div class="raccolte-elenco">${Object.entries(CATEGORIE).filter(([n]) => !RACCOLTE[n]).map(([n, c]) => t(n, `${inCategoria(n).length} libri`, c)).join('')}</div></div>`;
+    app.innerHTML = `<div class="pagina"><h1>Raccolte e scaffali</h1><p class="intro">Come entrare in una grande libreria: scegli un reparto. Tutti i libri sono gratuiti, per sempre.</p>
+      <h2 class="reparto">In evidenza</h2>
+      <div class="raccolte-elenco">${Object.entries(RACCOLTE).map(([n, r]) => t(n, `${inRaccolta(n).length || 'Presto i primi'} libri · ${r.d}`, r.c)).join('')}</div>
+      ${REPARTI.map(([nome, sc]) => `<h2 class="reparto">${esc(nome)}</h2><div class="raccolte-elenco">${sc.filter(n => !RACCOLTE[n] || n === 'Lavoro e formazione')
+        .map(n => t(n, `${inCategoria(n).length} libri`, CATEGORIE[n] || RACCOLTE[n].c)).join('')}</div>`).join('')}</div>`;
   }
 
   async function mia() {
@@ -215,7 +345,7 @@
       <div class="scheda-testa"><div class="sfondo" style="${sfondo}"></div>${copertina(b)}
         <div><h1>${esc(b.t)}</h1>
           <p class="chi">di <b>${esc(autori(b))}</b>${vita(b)}${b.y ? ` · ${b.y}` : ''}</p>
-          <div class="etichette">${rac}<span class="etichetta">${esc(b.c)}</span>${b.sc ? '<span class="etichetta">Edizione originale scansionata</span>' : ''}${b.nostra ? '<span class="etichetta">Edizione Libri di strada</span>' : ''}</div>
+          <div class="etichette">${rac}<span class="etichetta">${esc(b.c)}</span>${(b.sf || []).map(n => `<a class="etichetta c" style="--c:${(CATEGORIE[n] || [, , '#777'])[2]}" href="#/categoria/${encodeURIComponent(n)}">${esc(n)}</a>`).join('')}${b.sc ? '<span class="etichetta">Edizione originale scansionata</span>' : ''}${b.nostra ? '<span class="etichetta">Edizione Libri di strada</span>' : ''}</div>
           <div class="bottoni">
             ${b.e ? `<a class="btn primario" href="#/leggi/${encodeURIComponent(b.id)}">${ico.play} ${pr > .01 ? `Riprendi (${Math.round(pr * 100)}%)` : 'Leggi ora'}</a>` : ''}
             ${b.e ? `<button class="btn secondario" data-salva>${salvato ? ico.ok + ' Salvato' : ico.salva + ' Salva'}</button>` : ''}
@@ -242,6 +372,10 @@
     el.hidden = false;
     document.body.classList.add('bloccato');
     document.title = b.t + ' · Libri di strada';
+    const foglio = el.querySelector('.scheda-foglio');
+    foglio.style.setProperty('--amb', colori(b)[2]);
+    if (b.cov) coloreDominante(`copertine/${b.cov === 1 ? b.id : b.cov}.webp`).then(c => { if (c && b.cov === 1) foglio.style.setProperty('--amb', c); });
+    rivela(el);
     el.scrollTop = 0;
     attivaFrecce(el);
     el.querySelector('.chiudi').onclick = chiudiScheda;
@@ -290,7 +424,7 @@
   function apriCerca() {
     const c = $('#cerca');
     c.hidden = false; document.body.classList.add('bloccato');
-    const filtri = ['Tutti', ...Object.keys(RACCOLTE), ...Object.keys(CATEGORIE).filter(n => !RACCOLTE[n])];
+    const filtri = ['Tutti', ...Object.keys(RACCOLTE), ...REPARTI.flatMap(r => r[1]).filter(n => !RACCOLTE[n] && n !== 'I best seller di sempre')];
     $('#filtri').innerHTML = filtri.map(f => `<button class="filtro ${(S.filtro || 'Tutti') === f ? 'on' : ''}" data-f="${esc(f)}">${esc(f)}</button>`).join('');
     $('#filtri').onclick = e => { const f = e.target.closest('[data-f]'); if (!f) return; S.filtro = f.dataset.f === 'Tutti' ? null : f.dataset.f; apriCerca(); };
     cerca();
@@ -300,7 +434,7 @@
   function cerca() {
     const q = norm($('#q').value.trim());
     const parole = q.split(/\s+/).filter(Boolean);
-    let ris = S.libri.filter(b => !S.filtro || b.c === S.filtro || (b.s || []).includes(S.filtro));
+    let ris = S.libri.filter(b => !S.filtro || b.c === S.filtro || (b.s || []).includes(S.filtro) || (b.sf || []).includes(S.filtro));
     if (parole.length) {
       ris = ris.map(b => {
         const t = norm(b.t), a = norm(autori(b)), x = norm((b.tr || '') + ' ' + (b.s || []).join(' ') + ' ' + b.c);
