@@ -111,7 +111,7 @@ def main():
         tr = b.get("trama") or {}
         agg = b.get("aggiunto") or ""
         nuovo = bool(b.get("moderno")) and agg and (oggi - dt.date.fromisoformat(agg)).days < 45
-        v = {"id": b["id"], "t": b["titolo"], "a": b.get("autori") or [], "c": b.get("categoria"), "s": b.get("sezioni") or [], "sf": b.get("scaffali") or [],
+        v = {"id": b["id"], "t": b["titolo"], "a": b.get("autori") or [], "c": b.get("categoria"), "s": b.get("sezioni") or [], "sf": b.get("scaffali") or [], "w": b.get("parole"),
              "y": b.get("anno"), "n": b.get("autore_nato"), "m": b.get("autore_morto"), "k": 1 if b.get("canone") else 0,
              "v": b.get("letture") or 0, "e": b.get("epub"), "eb": b.get("epub_byte") or 0, "p": b.get("pdf"), "pb": b.get("pdf_byte") or 0,
              "f": b.get("fonte"), "fn": b.get("fonte_nome"), "l": b.get("licenza"), "agg": agg}

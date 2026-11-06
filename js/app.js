@@ -84,7 +84,7 @@
   let toastT;
   function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2600); }
   const hash = s => { let h = 2166136261; for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
-  const colori = b => (b.s && b.s[0] && RACCOLTE[b.s[0]]?.c) || (b.sf && b.sf[0] && CATEGORIE[b.sf[0]]) || CATEGORIE[b.c] || ['#151515', '#3a3a3a', '#777'];
+  const colori = b => coloriCopertina(b);
   const autori = b => (b.a || []).join(', ');
   const mb = n => n > 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB';
   const vita = b => b.n || b.m ? ` (${b.n || '?'}–${b.m || '?'})` : '';
@@ -100,26 +100,50 @@
   };
   const progresso = id => (store.get('pos', {})[id] || {}).p || 0;
 
-  // ---------------------------------------------------------------- copertina
+  // ---------------------------------------------------------------- copertina: poster grafico contemporaneo
+  // [sfondo, accento, testo]. Le raccolte a tema hanno tavolozze proprie, gli altri libri pescano tra quelle vivaci.
+  const TAVOLOZZE = [
+    ['#ff5a36', '#1b1b3a', '#fff4e6'], ['#2d5bff', '#ffd23f', '#ffffff'], ['#00c2a8', '#ff3d7f', '#0e1116'], ['#ffcc00', '#e4002b', '#111111'],
+    ['#7b2ff7', '#ff9f1c', '#f7f7ff'], ['#111111', '#c6ff00', '#f2f2f2'], ['#ff7aa2', '#2b2d42', '#ffffff'], ['#06d6a0', '#118ab2', '#06231f'],
+    ['#f94144', '#f9c74f', '#1d1d1d'], ['#3a86ff', '#ff006e', '#ffffff'], ['#ffbe0b', '#3a0ca3', '#1a0f3a'], ['#e9ff70', '#ff70a6', '#1b1b1b'],
+    ['#3d348b', '#ff8fab', '#ffffff'], ['#011627', '#2ec4b6', '#fdfffc'], ['#fb5607', '#ffe8d6', '#2b0d00'], ['#8338ec', '#3affc3', '#ffffff'],
+  ];
+  const TAVOLOZZE_TEMA = {
+    'Horror e fantastico': [['#0b0b0b', '#ff1f3d', '#f2f2f2'], ['#120a1f', '#9dff00', '#eeeeee'], ['#1a0005', '#ff4d6d', '#ffe5ec'], ['#000000', '#ff7b00', '#fff3e6']],
+    'Roma': [['#e2552d', '#2b1a12', '#ffe9d6'], ['#f2a65a', '#7a1e12', '#2b0f08'], ['#ffd166', '#c0392b', '#1b0d08'], ['#7a1e12', '#ffb26b', '#fff1e3']],
+    'Esoterismo e mistero': [['#1b0f3a', '#ffd166', '#f3e9ff'], ['#3c1e70', '#2ee6d6', '#ffffff'], ['#0b0620', '#c77dff', '#f7f0ff']],
+    'Lavoro e formazione': [['#0b3d3a', '#c6ff00', '#f2fff4'], ['#00a896', '#0b0b0b', '#ffffff'], ['#e9ff70', '#0b3d3a', '#0b0b0b']],
+    'Autori emergenti': [['#ffcf5c', '#111111', '#111111'], ['#111111', '#ffcf5c', '#ffffff']],
+  };
+  function tavolozza(b) {
+    const h = hash(b.id);
+    const tema = (b.s || []).find(n => TAVOLOZZE_TEMA[n]);
+    const t = tema ? TAVOLOZZE_TEMA[tema] : TAVOLOZZE;
+    return t[h % t.length];
+  }
+  const minutiLettura = b => b.w ? b.w / 230 : null;   // parole vere del libro, circa 230 al minuto
+  const durata = b => {
+    const m = minutiLettura(b);
+    if (!m) return '';
+    const min = Math.max(5, Math.round(m / 5) * 5);
+    return min < 60 ? `${min} min` : min < 600 ? `${Math.round(min / 60)} h` : `${Math.round(min / 60)} h+`;
+  };
   function copertina(b, opt = {}) {
-    const [c0, c1, c2] = colori(b);
+    const [p1, p2, p3] = tavolozza(b);
+    const h = hash(b.id);
     const lt = b.t.length > 46 ? 'lunghissimo' : b.t.length > 26 ? 'lungo' : '';
     const pr = opt.progresso ? progresso(b.id) : 0;
     const extra = (b.nuovo ? '<span class="bollino">Nuovo</span>' : '') + (pr > .01 ? `<span class="barra-lettura"><i style="width:${Math.round(pr * 100)}%"></i></span>` : '');
-    const testo = `<span class="pt"><span class="pt-a">${esc(autori(b))}</span><span class="pt-t ${lt}">${esc(b.t)}</span></span>`
-      + '<span class="costola"></span><span class="luce"></span>';
-    if (b.cov) {
-      const img = b.cov === 1 ? b.id : b.cov;   // 1 = immagine del libro, altrimenti il ritratto dell'autore
-      return `<span class="poster con-immagine${b.cov === 1 ? '' : ' ritratto'}" style="--c0:${c0};--c1:${c1};--c2:${c2}"><img src="copertine/${esc(img)}.webp" alt="" loading="lazy" decoding="async"
-        onerror="this.parentNode.classList.remove('con-immagine');this.parentNode.classList.add('disegnata');this.remove()">${testo}${extra}</span>`;
-    }
-    const h = hash(b.id);
-    const varia = `filter:hue-rotate(${(h % 41) - 20}deg) saturate(${0.9 + (h >> 5) % 40 / 100});background-position:${(h >> 9) % 100}% 0`;
-    const iniziale = (b.t.replace(/^(il|lo|la|i|gli|le|l'|un|uno|una|un')\s*/i, '').match(/[A-Za-zÀ-ÿ]/) || ['L'])[0].toUpperCase();
-    return `<span class="poster disegnata" style="--c0:${c0};--c1:${c1};--c2:${c2};${varia}"><span class="motivo m${(h >> 3) % 6}"></span>
-      <span class="iniziale">${esc(iniziale)}</span><span class="marchio">LdS</span>
-      <span class="fregio">${FREGI[hash(b.id) % FREGI.length]}</span>${testo}${extra}</span>`;
+    const titolo = b.t.replace(/\s*\([^)]*\)\s*$/, '');   // via le note di edizione: «Fosca (1869)» -> «Fosca»
+    const d = durata(b);
+    return `<span class="poster moderna f${(h >> 4) % 8}" style="--p1:${p1};--p2:${p2};--p3:${p3}">
+      <span class="forma"></span>
+      ${d ? `<span class="durata">${d}</span>` : ''}
+      <span class="pt"><span class="pt-t ${lt}">${esc(titolo)}</span><span class="pt-a">${esc(autori(b))}</span></span>
+      <span class="costola"></span><span class="luce"></span>${extra}</span>`;
   }
+  // i colori per aloni e sfondi seguono la copertina
+  const coloriCopertina = b => { const [p1, p2] = tavolozza(b); return [p1, p2, p2]; };
   const tessera = (b, opt) => `<a class="libro" href="#/libro/${encodeURIComponent(b.id)}" aria-label="${esc(b.t)}, di ${esc(autori(b))}">
     ${copertina(b, opt)}${opt && opt.didascalia ? `<span class="sotto-titolo">${esc(b.t)}<span>${esc(autori(b))}</span></span>` : ''}</a>`;
 
@@ -163,7 +187,7 @@
     // 5 libri: prima quelli con immagine e trama, uno per raccolta, poi i grandi classici; cambiano ogni giorno
     const giorno = Math.floor(Date.now() / 864e5);
     const pesca = arr => arr.length ? arr[(hash(String(giorno)) + arr.length) % arr.length] : null;
-    const bello = b => b.cov && (b.tr || b.inc);
+    const bello = b => b.tr || b.inc;
     const scelti = [];
     for (const n of Object.keys(RACCOLTE)) {
       const x = pesca(inRaccolta(n).filter(bello).slice(0, 12));
@@ -175,10 +199,9 @@
   }
 
   function slide(h, i) {
-    const img = h.cov ? `copertine/${h.cov === 1 ? h.id : h.cov}.webp` : '';
-    const [c0, , c2] = colori(h);
-    return `<div class="slide hero${i === 0 ? ' on' : ''}" data-a1="${c2}" data-a2="${colori(h)[1]}">
-      ${img ? `<div class="hero-sfondo" style="background-image:url('${esc(img)}')"></div>` : `<div class="hero-sfondo" style="background:radial-gradient(circle at 70% 30%, ${c2}, ${c0})"></div>`}
+    const [p1, p2] = tavolozza(h);
+    return `<div class="slide hero${i === 0 ? ' on' : ''}" data-a1="${p1}" data-a2="${p2}">
+      <div class="hero-sfondo moderno" style="--p1:${p1};--p2:${p2}"></div>
       <div class="hero-dentro"><div class="hero-testo">
         <div class="occhiello">${i === 0 ? 'Il libro di oggi' : 'Da non perdere'}${h.s && h.s[0] ? ' · ' + esc(h.s[0]) : ' · ' + esc(h.c)}</div>
         <h1>${esc(h.t)}</h1>
@@ -235,6 +258,17 @@
     html += '<div class="file">';
     html += fila('Continua a leggere', inLettura, { progresso: true, colore: 'var(--gold)' });
     if (nuovi.length) html += fila('Appena arrivati', nuovi, { colore: 'var(--gold)' });
+    // scaffali con un aggancio di oggi: film e serie, brividi brevi, letture da una sera
+    const minuti = b => minutiLettura(b) || 9999;
+    const FILM = /jekyll|sherlock|isola del tesoro|pinocchio|giro del mondo|corsaro nero|tigri di momp|promessi sposi|casa usher|cuore rivelatore|gatto nero|montecristo|dalla terra alla luna|isola misteriosa|ventimila leghe|cantico di natale|moschettieri|don chisciotte|frankenstein|dracula|amleto|romeo e giulietta|otello|macbeth|decameron|divina commedia|fu mattia pascal|piccolo lord|zanna bianca|robinson|gulliver|alice|le avventure di tom|^cuore$/i;
+    const film = S.libri.filter(b => FILM.test(b.t)).sort(ordina);
+    const brividi = S.libri.filter(b => (b.s || []).includes('Horror e fantastico') && minuti(b) <= 35).sort(ordina);
+    const sera = S.libri.filter(b => minuti(b) > 25 && minuti(b) <= 150 && ['Romanzi', 'Racconti e novelle'].includes(b.c)).sort(ordina);
+    const mondi = S.libri.filter(b => (b.sf || []).includes('Fantascienza') || /luna|fiab|mago|incantat|fata|drago|mostr|viaggio al centro/i.test(b.t)).sort(ordina);
+    html += fila('Hanno ispirato film e serie', film, { colore: '#ff3d7f', sotto: 'Le storie originali dietro i film che conosci' });
+    html += fila('Brividi in meno di 30 minuti', brividi, { colore: '#ff1f3d', sotto: 'Racconti brevi da leggere al buio' });
+    html += fila('Da finire in una sera', sera, { colore: '#2ec4b6', sotto: 'Storie che cominci e finisci prima di dormire' });
+    html += fila('Mondi fantastici', mondi, { colore: '#8338ec', sotto: 'Viaggi sulla Luna, fate, mostri e invenzioni impossibili' });
     const raccolte = Object.entries(RACCOLTE);
     raccolte.forEach(([n, r], i) => {
       html += fila(n, inRaccolta(n), { sotto: r.d, colore: r.c[2], link: '#/raccolta/' + encodeURIComponent(n) });
@@ -338,13 +372,13 @@
     const stessa = S.libri.filter(x => x.id !== b.id && (b.s && b.s[0] ? (x.s || []).includes(b.s[0]) : x.c === b.c)).sort(ordina);
     const rac = (b.s || []).map(n => `<span class="etichetta c" style="--c:${RACCOLTE[n]?.c[2] || '#777'}">${esc(n)}</span>`).join('');
     const pr = progresso(b.id);
-    const sfondo = b.cov ? `background-image:url('copertine/${esc(b.cov === 1 ? b.id : b.cov)}.webp')` : `background:${colori(b)[2]}`;
+    const sfondo = `background:linear-gradient(135deg, ${tavolozza(b)[0]}, ${tavolozza(b)[1]})`;
     const scaricabile = S.online !== false || b.r;
     el.innerHTML = `<div class="scheda-foglio">
       <button class="chiudi" aria-label="Chiudi">${ico.x}</button>
       <div class="scheda-testa"><div class="sfondo" style="${sfondo}"></div>${copertina(b)}
         <div><h1>${esc(b.t)}</h1>
-          <p class="chi">di <b>${esc(autori(b))}</b>${vita(b)}${b.y ? ` · ${b.y}` : ''}</p>
+          <p class="chi">di <b>${esc(autori(b))}</b>${vita(b)}${b.y ? ` · ${b.y}` : ''}${durata(b) ? ` · <span class="durata-testo">${durata(b)} di lettura</span>` : ''}</p>
           <div class="etichette">${rac}<span class="etichetta">${esc(b.c)}</span>${(b.sf || []).map(n => `<a class="etichetta c" style="--c:${(CATEGORIE[n] || [, , '#777'])[2]}" href="#/categoria/${encodeURIComponent(n)}">${esc(n)}</a>`).join('')}${b.sc ? '<span class="etichetta">Edizione originale scansionata</span>' : ''}${b.nostra ? '<span class="etichetta">Edizione Libri di strada</span>' : ''}</div>
           <div class="bottoni">
             ${b.e ? `<a class="btn primario" href="#/leggi/${encodeURIComponent(b.id)}">${ico.play} ${pr > .01 ? `Riprendi (${Math.round(pr * 100)}%)` : 'Leggi ora'}</a>` : ''}
@@ -362,6 +396,7 @@
             ${b.e ? `<a class="btn contorno piccolo" ${scaricabile ? `href="${esc(urlFile(b, 'e', true))}"` : 'aria-disabled="true"'} data-scarica>${ico.giu} ePub · ${mb(b.eb)}</a>` : ''}
             ${b.p ? `<a class="btn contorno piccolo" ${S.online !== false ? `href="${esc(urlFile(b, 'p', true))}"` : 'aria-disabled="true"'} data-scarica>${ico.giu} PDF · ${mb(b.pb)}</a>` : ''}
           </div>
+          ${b.cov ? `<figure class="epoca"><img src="copertine/${esc(b.cov === 1 ? b.id : b.cov)}.webp" alt="" loading="lazy"><figcaption>${b.cov === 1 ? 'Dall\'edizione originale' : esc(b.a[0])}</figcaption></figure>` : ''}
           <dl style="margin-top:18px">${b.y ? `<dt>Anno</dt><dd>${b.y}</dd>` : ''}<dt>Genere</dt><dd>${esc(b.c)}</dd>
             ${b.m ? `<dt>Autore</dt><dd>morto nel ${b.m}</dd>` : ''}<dt>Fonte</dt><dd>${esc(b.fn || 'Wikisource')}</dd></dl>
           <p class="licenza">${esc(b.l || '')} <a href="${esc(b.f)}" target="_blank" rel="noopener">Vedi la fonte</a>.</p>
@@ -373,8 +408,7 @@
     document.body.classList.add('bloccato');
     document.title = b.t + ' · Libri di strada';
     const foglio = el.querySelector('.scheda-foglio');
-    foglio.style.setProperty('--amb', colori(b)[2]);
-    if (b.cov) coloreDominante(`copertine/${b.cov === 1 ? b.id : b.cov}.webp`).then(c => { if (c && b.cov === 1) foglio.style.setProperty('--amb', c); });
+    foglio.style.setProperty('--amb', tavolozza(b)[0]);
     rivela(el);
     el.scrollTop = 0;
     attivaFrecce(el);
