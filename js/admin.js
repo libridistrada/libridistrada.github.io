@@ -55,11 +55,11 @@
 
   // ---------------------------------------------------------------- pannello
   async function pannello(app, scheda = 'sostieni') {
-    guscio(app, `<nav class="admin-schede">${[['sostieni', 'Offrimi un caffè'], ['statistiche', 'Statistiche'], ['proposte', 'Proposte degli autori']]
+    guscio(app, `<nav class="admin-schede">${[['sostieni', 'Offrimi un caffè'], ['statistiche', 'Statistiche'], ['proposte', 'Proposte degli autori'], ['stampa', 'Da stampare']]
       .map(([k, n]) => `<button class="filtro ${k === scheda ? 'on' : ''}" data-s="${k}">${n}</button>`).join('')}</nav><div id="admin-corpo"><div class="carica"><div class="anello"></div></div></div>`);
     app.querySelector('.admin-schede').onclick = e => { const b = e.target.closest('[data-s]'); if (b) pannello(app, b.dataset.s); };
     const corpo = document.getElementById('admin-corpo');
-    try { await ({ sostieni, statistiche, proposte }[scheda])(corpo, app); }
+    try { await ({ sostieni, statistiche, proposte, stampa }[scheda])(corpo, app); }
     catch (err) { if (!tok.get()) return window.LDSAdmin(app); corpo.innerHTML = `<div class="vuoto"><b>Qualcosa non va</b>${esc(err.message)}</div>`; }
   }
 
@@ -95,6 +95,33 @@
       } catch (err) { out.textContent = err.message; }
     };
     document.getElementById('prova').onclick = () => window.LDSSostieni.prova({ ...leggiF(), attivo: true, link: leggiF().link || 'https://buymeacoffee.com/' });
+  }
+
+  // locandina e adesivo: stanno sull'HP e si scaricano solo da qui, non sono sul sito pubblico
+  const STAMPA = {
+    'locandina.pdf': ['Locandina A3', 'PDF pronto per la tipografia, 297 × 420 mm.'],
+    'adesivo.pdf': ['Adesivo 10 × 14 cm', 'PDF pronto per la tipografia.'],
+    'locandina.png': ['Locandina A3 · immagine', 'PNG ad alta risoluzione, per i social o la stampa in copisteria.'],
+    'adesivo.png': ['Adesivo · immagine', 'PNG a 300 dpi.'],
+    'qr_logo.png': ['QR code con il logo', 'PNG 3000 px, per qualsiasi altro stampato.'],
+    'qr.svg': ['QR code vettoriale', 'SVG senza logo, si ingrandisce senza perdere qualità.'],
+  };
+  async function stampa(corpo) {
+    const { file } = await api('GET', '/admin/stampa');
+    corpo.innerHTML = `<p class="intro">Il materiale da stampare è riservato: sta sul server di casa e si scarica solo da qui.
+        Ricorda: a Roma gli adesivi su muri, pali e cartelli pubblici sono affissione abusiva. Meglio bar, librerie, biblioteche e negozi, con il permesso del gestore.</p>
+      ${file.length ? `<div class="admin-stampa">${file.map(f => { const [t, d] = STAMPA[f.nome] || [f.nome, '']; return `<div class="admin-file">
+          <div><b>${esc(t)}</b><small>${esc(d)} · ${f.kb > 1024 ? (f.kb / 1024).toFixed(1).replace('.', ',') + ' MB' : f.kb + ' KB'}</small></div>
+          <button class="btn secondario piccolo" data-f="${esc(f.nome)}">Scarica</button></div>`; }).join('')}</div>`
+        : '<div class="vuoto"><b>Nessun file</b>Il materiale da stampare non è ancora sul server.</div>'}`;
+    corpo.onclick = async e => {
+      const b = e.target.closest('[data-f]'); if (!b) return;
+      const prima = b.textContent; b.textContent = 'Scarico…'; b.disabled = true;
+      try { const blob = await api('GET', '/admin/stampa/' + encodeURIComponent(b.dataset.f), null, true);
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Libri di strada - ' + b.dataset.f; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 60e3); }
+      catch (err) { L.toast(err.message); }
+      finally { b.textContent = prima; b.disabled = false; }
+    };
   }
 
   async function statistiche(corpo) {

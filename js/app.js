@@ -600,8 +600,6 @@
           <a class="btn secondario" href="img/qr.png" download="libri-di-strada-qr.png">Scarica il QR</a>
         </div>
         <p class="cond-nota">Quando condividi il link, nell'anteprima di WhatsApp, Telegram o Facebook compare anche il QR.</p>
-        <div class="cond-stampa"><h2>Da stampare</h2>
-          <a href="stampa/locandina.pdf" download>Locandina A3 · PDF</a><a href="stampa/adesivo.pdf" download>Adesivo 10 × 14 cm · PDF</a></div>
       </div></div></div>`;
     app.querySelector('.cond-bottoni').addEventListener('click', async e => {
       const b = e.target.closest('button'); if (!b) return;
