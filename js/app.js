@@ -374,7 +374,7 @@
       <h2 class="reparto">In evidenza</h2>
       <div class="raccolte-elenco">${Object.entries(RACCOLTE).map(([n, r]) => t(n, `${inRaccolta(n).length || 'Presto i primi'} libri · ${r.d}`, r.c)).join('')}</div>
       ${REPARTI.map(([nome, sc]) => `<h2 class="reparto">${esc(nome)}</h2><div class="raccolte-elenco">${sc.filter(n => !RACCOLTE[n] || n === 'Lavoro e formazione')
-        .map(n => t(n, `${inCategoria(n).length} libri`, CATEGORIE[n] || RACCOLTE[n].c)).join('')}</div>`).join('')}</div>`;
+        .map(n => t(n, inCategoria(n).length ? `${inCategoria(n).length} libri` : 'In arrivo: li stiamo raccogliendo', CATEGORIE[n] || RACCOLTE[n].c)).join('')}</div>`).join('')}</div>`;
   }
 
   async function mia() {
@@ -502,7 +502,9 @@
   function apriCerca() {
     const c = $('#cerca');
     c.hidden = false; document.body.classList.add('bloccato');
-    const filtri = ['Tutti', ...Object.keys(RACCOLTE), ...REPARTI.flatMap(r => r[1]).filter(n => !RACCOLTE[n] && n !== 'I best seller di sempre')];
+    const quanti = n => S.libri.reduce((t, b) => t + (b.c === n || (b.s || []).includes(n) || (b.sf || []).includes(n) ? 1 : 0), 0);
+    const filtri = ['Tutti', ...Object.keys(RACCOLTE), ...REPARTI.flatMap(r => r[1]).filter(n => !RACCOLTE[n] && n !== 'I best seller di sempre')]
+      .filter(n => n === 'Tutti' || n === S.filtro || quanti(n) > 0);   // uno scaffale ancora vuoto non si mostra
     $('#filtri').innerHTML = filtri.map(f => `<button class="filtro ${(S.filtro || 'Tutti') === f ? 'on' : ''}" data-f="${esc(f)}">${esc(f)}</button>`).join('');
     $('#filtri').onclick = e => { const f = e.target.closest('[data-f]'); if (!f) return; S.filtro = f.dataset.f === 'Tutti' ? null : f.dataset.f; apriCerca(); };
     cerca();
@@ -606,7 +608,7 @@
     if (p1 === 'raccolte') return raccolte();
     if (p1 === 'mia') return mia();
     if (p1 === 'raccolta') return elenco(p2, RACCOLTE[p2]?.d || '', inRaccolta(p2));
-    if (p1 === 'categoria') return elenco(p2, `${inCategoria(p2).length} libri`, inCategoria(p2));
+    if (p1 === 'categoria') return elenco(p2, inCategoria(p2).length ? `${inCategoria(p2).length} libri` : 'In arrivo: li stiamo raccogliendo, torna tra qualche giorno', inCategoria(p2));
     if (p1 === 'admin') return window.LDSAdmin(app);
     if (p1 === 'pubblica') return window.LDSPubblica ? window.LDSPubblica(app) : testo('Pubblica il tuo libro', '<p>In arrivo.</p>');
     if (p1 === 'condividi') return condividi();
