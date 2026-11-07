@@ -11,24 +11,24 @@
   <meta property="og:description" content="Una libreria gratuita nascosta per le strade della città. Inquadra, scegli, leggi.">
   <meta property="og:image" content="img/condivisione.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="img/icona.svg" type="image/svg+xml">
+  <link rel="icon" href="img/icona-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="img/icona-180.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preload" href="font/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="font/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=20261107024053">
-  <link rel="stylesheet" href="css/lettore.css?v=20261107024053">
-  <link rel="stylesheet" href="css/effetti.css?v=20261107024053">
-  <link rel="stylesheet" href="css/copertine.css?v=20261107024053">
-  <link rel="stylesheet" href="css/movimento.css?v=20261107024053">
-  <link rel="stylesheet" href="css/fondale.css?v=20261107024053">
-  <link rel="stylesheet" href="css/admin.css?v=20261107024053">
+  <link rel="stylesheet" href="css/app.css?v=20261107035358">
+  <link rel="stylesheet" href="css/lettore.css?v=20261107035358">
+  <link rel="stylesheet" href="css/effetti.css?v=20261107035358">
+  <link rel="stylesheet" href="css/copertine.css?v=20261107035358">
+  <link rel="stylesheet" href="css/movimento.css?v=20261107035358">
+  <link rel="stylesheet" href="css/fondale.css?v=20261107035358">
+  <link rel="stylesheet" href="css/admin.css?v=20261107035358">
 </head>
 <body>
   <header class="nav" id="nav">
     <a class="logo" href="#/" aria-label="Libri di strada, home">
-      <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="5" width="26" height="18" rx="3"/><path d="M8 11h16M8 16h10"/><path d="M16 23v6"/></svg>
+      <img class="logo-pin" src="img/segnaposto.webp" alt="" width="40" height="60">
       <span>Libri <i>di</i> strada</span>
     </a>
     <nav class="links">
@@ -36,6 +36,7 @@
       <a href="#/raccolte" data-nav="raccolte">Raccolte</a>
       <a href="#/mia" data-nav="mia">La mia libreria</a>
     </nav>
+    <a class="targa-nav" href="#/info" title="Libri di strada: come funziona"><img src="img/targa.webp" alt="Libri di strada" width="260" height="136"></a>
     <button class="icon-btn" id="btn-cerca" aria-label="Cerca">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
     </button>
@@ -60,25 +61,30 @@
   <div class="toast" id="toast" role="status"></div>
 
   <footer class="piede" id="piede">
-    <div class="piede-marchio">Libri <i>di</i> strada</div>
-    <p>Libri gratuiti e liberi da diritti, nascosti per le strade della città. Nessun account, nessuna pubblicità, nessun tracciamento.</p>
-    <nav>
-      <a href="#/info">Come funziona</a>
-      <a href="#/pubblica">Pubblica il tuo libro</a>
-      <a href="#/licenze">Licenze e fonti</a>
-      <a href="#/privacy">Privacy</a>
-    </nav>
+    <div class="piede-griglia">
+      <div class="piede-marca">
+        <div class="piede-targa-box">
+          <img class="piede-targa" src="img/targa.webp" alt="Libri di strada" width="260" height="136" loading="lazy">
+          <a class="crepa" href="#/admin" tabindex="-1" aria-hidden="true"></a>
+        </div>
+        <p>Libri gratuiti e liberi da diritti, nascosti per le strade della città. Nessun account, nessuna pubblicità, nessun tracciamento.</p>
+      </div>
+      <nav class="piede-col" aria-label="Esplora"><h4>Esplora</h4><a href="#/">Home</a><a href="#/raccolte">Raccolte</a><a href="#/mia">La mia libreria</a></nav>
+      <nav class="piede-col" aria-label="Il progetto"><h4>Il progetto</h4><a href="#/info">Come funziona</a><a href="#/pubblica">Pubblica il tuo libro</a></nav>
+      <nav class="piede-col" aria-label="Trasparenza"><h4>Trasparenza</h4><a href="#/licenze">Licenze e fonti</a><a href="#/privacy">Privacy</a></nav>
+    </div>
+    <div class="piede-fondo"><span>Libri di strada · Roma</span><span>Testi da Wikisource, Internet Archive, LibriVox e Wikipedia</span></div>
   </footer>
 
   <script src="vendor/jszip.min.js"></script>
   <script src="vendor/epub.min.js"></script>
-  <script src="js/app.js?v=20261107024053"></script>
-  <script src="js/lettore.js?v=20261107024053"></script>
-  <script src="js/pubblica.js?v=20261107024053"></script>
-  <script src="js/fondale.js?v=20261107024053"></script>
-  <script src="js/sostieni.js?v=20261107024053"></script>
-  <script src="js/admin.js?v=20261107024053"></script>
-  <script src="js/ascolta.js?v=20261107024053"></script>
-  <script src="js/movimento.js?v=20261107024053"></script>
+  <script src="js/app.js?v=20261107035358"></script>
+  <script src="js/lettore.js?v=20261107035358"></script>
+  <script src="js/pubblica.js?v=20261107035358"></script>
+  <script src="js/fondale.js?v=20261107035358"></script>
+  <script src="js/sostieni.js?v=20261107035358"></script>
+  <script src="js/admin.js?v=20261107035358"></script>
+  <script src="js/ascolta.js?v=20261107035358"></script>
+  <script src="js/movimento.js?v=20261107035358"></script>
 </body>
 </html>
