@@ -98,6 +98,7 @@
     try { await R.rend.display(pos || undefined); }
     catch { await R.rend.display(); }
     document.getElementById('lt-carica').remove();
+    R.pronto = true;   // da qui in poi pagine e voce funzionano
     // le posizioni (per la percentuale) si calcolano dopo, senza bloccare la lettura
     R.book.ready.then(() => R.book.locations.generate(1600)).then(() => {
       if (R.book !== null) { R.locOk = true; const c = document.getElementById('lt-cursore'); if (c) c.disabled = false; if (R.rend.location) posizione(R.rend.location); }
@@ -124,6 +125,7 @@
       capEl.textContent = voce ? voce.label.trim() : '';
     }
     segnoAttivo();
+    aggiornaAvanzamento();
   }
 
   function segni() { return store.get('segni', {})[R.b.id] || []; }
@@ -229,25 +231,32 @@
     return { testo: div.textContent, pagina: pagina.toString().replace(/\s+/g, ' ').length };
   }
 
+  // ---- controllo della lettura: pausa, ripeti la pagina, salta la frase, capitoli, spegnimento
+  const N = { pausa: false, ripeti: false, fineTimer: 0, frase: 0, frasi: 0 };
   async function leggiAdAltaVoce() {
     if (!('speechSynthesis' in window)) return toast('Questo browser non sa leggere ad alta voce');
-    if (R.voce) { R.voce = false; speechSynthesis.cancel(); aggiornaVoce(); return; }
-    R.voce = true; aggiornaVoce();
+    R.voce = true; N.pausa = false; aggiornaVoce();
     const giro = R.giro = Symbol();
-    const prof = PROFILI[imp().profilo || 'narratrice'];
-    const voce = voceScelta();
-    if (!voce) toast('Nessuna voce italiana sul dispositivo: uso quella predefinita');
+    if (!voceScelta()) toast('Nessuna voce italiana sul dispositivo: uso quella predefinita');
     while (R.voce && R.giro === giro && R.rend) {
+      N.ripeti = false;
       let blocco;
       try { blocco = await testoDaQui(); } catch { blocco = { testo: await testoPagina(), pagina: 1e9 }; }
       const frasi = frasiDi(blocco.testo);
-      let letti = 0, soglia = blocco.pagina;
-      for (const f of frasi) {
+      let letti = 0, soglia = blocco.pagina, i = 0;
+      N.frasi = frasi.length;
+      while (i < frasi.length) {
         if (!R.voce || R.giro !== giro) return;
-        const ok = await parla(f, prof, voce);
-        if (!ok && !R.voce) return;
+        if (N.ripeti) break;
+        if (N.pausa) { await attendi(200); continue; }
+        if (N.fineTimer && Date.now() > N.fineTimer) { N.fineTimer = 0; N.pausa = true; aggiornaVoce(); toast('Buonanotte: lettura in pausa'); continue; }
+        const f = frasi[i];
+        N.frase = i; aggiornaAvanzamento();
+        const ok = await parla(f, PROFILI[imp().profilo || 'narratrice'], voceScelta());
+        if (!ok && (N.pausa || N.ripeti)) continue;          // interrotta da pausa o «ripeti»: si riprende da qui
+        i++;
         letti += f.t.length + 1;
-        if (letti >= soglia - 4) {                          // la pagina è finita: si gira, senza interrompere la voce
+        if (letti >= soglia - 4) {                           // pagina finita: si gira senza fermare la voce
           const prima = R.rend.location.start.cfi;
           await R.rend.next();
           try { const l = R.rend.location; const a = await R.book.getRange(l.start.cfi), z = await R.book.getRange(l.end.cfi);
@@ -255,20 +264,99 @@
             soglia += pr.toString().replace(/\s+/g, ' ').length; } catch { soglia = 1e9; }
           if (R.rend.location.start.cfi === prima) soglia = 1e9;
         }
-        await attendi(pausaDopo(f));
+        if (ok) await attendi(pausaDopo(f));
       }
       if (!R.voce || R.giro !== giro) return;
-      // fine del capitolo: al successivo, con una pausa più lunga
+      if (N.ripeti) continue;
       const sezione = R.rend.location.start.index;
       await R.rend.next();
       while (R.rend.location && R.rend.location.start.index === sezione && !R.rend.location.atEnd) await R.rend.next();
-      if (R.rend.location && R.rend.location.atEnd && R.rend.location.start.index === sezione) { R.voce = false; aggiornaVoce(); toast('Fine del libro'); return; }
+      if (R.rend.location && R.rend.location.atEnd && R.rend.location.start.index === sezione) { fermaVoce(); toast('Fine del libro'); return; }
       await attendi(900);
     }
   }
+  function fermaVoce() { R.voce = false; N.pausa = false; try { speechSynthesis.cancel(); } catch { /* */ } aggiornaVoce(); }
+  function comandoVoce(c) {
+    if (c === 'play') {
+      if (!R.voce) return leggiAdAltaVoce();
+      N.pausa = !N.pausa;
+      if (N.pausa) speechSynthesis.cancel();
+      return aggiornaVoce();
+    }
+    if (!R.voce) return;
+    if (c === 'avanti') { speechSynthesis.cancel(); return; }                       // la frase in corso si salta
+    if (c === 'indietro') { N.ripeti = true; speechSynthesis.cancel(); return; }    // si ricomincia la pagina
+    if (c === 'prec' || c === 'succ') {
+      const loc = R.rend.location, voci = (R.book.navigation && R.book.navigation.toc) || [];
+      const piatta = voci.flatMap(v => [v, ...(v.subitems || [])]);
+      const qui = piatta.findIndex(v => R.book.spine.get(v.href) && R.book.spine.get(v.href).index === loc.start.index);
+      const dove = piatta[qui + (c === 'succ' ? 1 : -1)];
+      N.ripeti = true; speechSynthesis.cancel();
+      if (dove) R.rend.display(dove.href); else (c === 'succ' ? R.rend.next() : R.rend.prev());
+    }
+  }
+
+  // ---- il pannello in basso, uguale al lettore degli audiolibri
+  const SVG = {
+    play: '<svg viewBox="0 0 24 24" class="pieno"><path d="M8 5.5v13l11-6.5z"/></svg>',
+    pausa: '<svg viewBox="0 0 24 24" class="pieno"><rect x="6.5" y="5" width="4" height="14" rx="1"/><rect x="13.5" y="5" width="4" height="14" rx="1"/></svg>',
+    prec: '<svg viewBox="0 0 24 24"><path d="M6 5v14M18 5l-9 7 9 7z"/></svg>', succ: '<svg viewBox="0 0 24 24"><path d="M18 5v14M6 5l9 7-9 7z"/></svg>',
+    ripeti: '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.5-5.8M4 4v4.5h4.5"/></svg>', salta: '<svg viewBox="0 0 24 24"><path d="M5 12h12M13 7l5 5-5 5"/></svg>',
+    giu: '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>', x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    luna: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
+  };
+  function apriPlayer() {
+    let p = el.querySelector('.lt-player');
+    if (p) { p.classList.remove('mini'); return; }
+    const i = imp();
+    el.insertAdjacentHTML('beforeend', `<div class="lt-player">
+      <button class="lt-pl-maniglia" data-p="riduci" aria-label="Riduci">${SVG.giu}</button>
+      <div class="lt-pl-mini"><button class="lt-pl-mini-play" data-p="play">${SVG.play}</button><span class="lt-pl-mini-cap"></span><button data-p="apri">Apri</button><button data-p="chiudi" aria-label="Ferma e chiudi">${SVG.x}</button></div>
+      <div class="lt-pl-corpo">
+        <div class="lt-pl-testa"><div><span class="lt-pl-occhiello">Voce narrante</span><b>${esc(R.b.t.replace(/\s*\([^)]*\)\s*$/, ''))}</b><span class="lt-pl-cap"></span></div>
+          <button class="lt-pl-chiudi" data-p="chiudi" aria-label="Ferma e chiudi">${SVG.x}</button></div>
+        <div class="lt-pl-gruppo"><span>Chi legge</span><div class="lt-pl-voci">${Object.entries(PROFILI).map(([k, p]) => `<button data-prof="${k}" class="${(i.profilo || 'narratrice') === k ? 'on' : ''}"><i>${p.nome[0]}</i>${p.nome}</button>`).join('')}
+          <select data-voce aria-label="Altre voci"><option value="">Altre voci…</option>${vociItaliane().map(v => `<option ${i.voceNome === v.name ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select></div></div>
+        <div class="lt-pl-tempo"><div class="lt-pl-barra"><i></i></div><div><span class="lt-pl-perc">0%</span><span class="lt-pl-frase"></span></div></div>
+        <div class="lt-pl-comandi"><button data-p="prec" aria-label="Capitolo precedente">${SVG.prec}</button><button data-p="indietro" aria-label="Ripeti la pagina">${SVG.ripeti}</button>
+          <button data-p="play" class="lt-pl-play" aria-label="Leggi">${SVG.play}</button>
+          <button data-p="avanti" aria-label="Salta la frase">${SVG.salta}</button><button data-p="succ" aria-label="Capitolo successivo">${SVG.succ}</button></div>
+        <div class="lt-pl-opzioni">
+          <div class="lt-pl-gruppo"><span>Velocità</span><div class="lt-pl-seg">${[0.8, 0.9, 1, 1.15, 1.3].map(v => `<button data-vel="${v}" class="${(i.velocita || 1) === v ? 'on' : ''}">${String(v).replace('.', ',')}×</button>`).join('')}</div></div>
+          <div class="lt-pl-gruppo"><span>${SVG.luna} Spegni dopo</span><div class="lt-pl-seg">${[[0, 'No'], [15, '15 min'], [30, '30 min'], [60, '1 ora']].map(([m, n]) => `<button data-t="${m}" class="${m === 0 ? 'on' : ''}">${n}</button>`).join('')}</div></div></div>
+        <p class="lt-pl-consiglio">La voce è quella del tuo dispositivo. Per una più naturale: iPhone → Impostazioni → Accessibilità → Contenuti letti → Voci → scarica una voce «migliorata»; sul PC usa Edge. I libri con <b>voce umana</b> si ascoltano dalla scheda.</p>
+      </div></div>`);
+    p = el.querySelector('.lt-player');
+    requestAnimationFrame(() => p.classList.add('su'));
+    p.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.p === 'riduci') return p.classList.add('mini');
+      if (b.dataset.p === 'apri') return p.classList.remove('mini');
+      if (b.dataset.p === 'chiudi') { fermaVoce(); p.classList.remove('su'); return setTimeout(() => p.remove(), 300); }
+      if (b.dataset.p) return comandoVoce(b.dataset.p);
+      if (b.dataset.prof) { sv('profilo', b.dataset.prof); sv('voceNome', ''); p.querySelector('[data-voce]').value = ''; p.querySelectorAll('[data-prof]').forEach(x => x.classList.toggle('on', x === b)); }
+      if (b.dataset.vel) { sv('velocita', +b.dataset.vel); p.querySelectorAll('[data-vel]').forEach(x => x.classList.toggle('on', x === b)); }
+      if (b.dataset.t !== undefined) { const m = +b.dataset.t; N.fineTimer = m ? Date.now() + m * 60000 : 0; p.querySelectorAll('[data-t]').forEach(x => x.classList.toggle('on', x === b)); if (m) toast(`La lettura si fermerà tra ${m} minuti`); }
+    });
+    p.querySelector('[data-voce]').onchange = e => { sv('voceNome', e.target.value); p.querySelectorAll('[data-prof]').forEach(x => x.classList.toggle('on', !e.target.value && x.dataset.prof === (imp().profilo || 'narratrice'))); };
+    aggiornaAvanzamento();
+  }
+  function aggiornaAvanzamento() {
+    const p = el.querySelector('.lt-player'); if (!p) return;
+    const perc = R.locOk && R.rend && R.rend.location ? Math.round((R.book.locations.percentageFromCfi(R.rend.location.start.cfi) || 0) * 100) : null;
+    const cap = (document.getElementById('lt-cap') || {}).textContent || '';
+    p.querySelector('.lt-pl-barra i').style.width = (perc || 0) + '%';
+    p.querySelector('.lt-pl-perc').textContent = perc === null ? '' : `${perc}% del libro`;
+    p.querySelector('.lt-pl-frase').textContent = R.voce && N.frasi ? `frase ${N.frase + 1} di ${N.frasi} del capitolo` : '';
+    p.querySelectorAll('.lt-pl-cap, .lt-pl-mini-cap').forEach(x => (x.textContent = cap || 'Pronto a leggere'));
+  }
   function aggiornaVoce() {
     const b = el.querySelector('[data-a="voce"]');
-    if (b) { b.classList.toggle('on', R.voce); b.innerHTML = R.voce ? icone.pausa : icone.voce; b.setAttribute('aria-label', R.voce ? 'Ferma la lettura' : 'Leggi ad alta voce'); }
+    const suona = R.voce && !N.pausa;
+    if (b) { b.classList.toggle('on', R.voce); b.setAttribute('aria-label', 'Voce narrante'); }
+    const p = el.querySelector('.lt-player');
+    if (p) { p.querySelectorAll('[data-p="play"]').forEach(x => (x.innerHTML = suona ? SVG.pausa : SVG.play)); p.classList.toggle('suona', suona); }
+    aggiornaAvanzamento();
   }
 
   function pannello(html) {
@@ -286,12 +374,7 @@
       <div class="lt-riga"><span>Carattere</span><div class="lt-scelte">${Object.keys(CARATTERI).map(f => `<button class="${i.font === f ? 'on' : ''}" data-font="${f}" style="font-family:${CARATTERI[f]}">${f === 'OpenDyslexic' ? 'Dislessia' : f}</button>`).join('')}</div></div>
       <div class="lt-riga"><span>Interlinea</span><div class="lt-scelte">${[[1.4, 'Stretta'], [1.6, 'Normale'], [1.9, 'Ampia']].map(([v, n]) => `<button class="${i.riga === v ? 'on' : ''}" data-riga="${v}">${n}</button>`).join('')}</div></div>
       <div class="lt-riga"><span>Tema</span><div class="lt-scelte">${Object.entries(TEMI).map(([n, t]) => `<button class="tema ${i.tema === n ? 'on' : ''}" data-tema="${n}" style="background:${t.bg};color:${t.fg}">${n[0].toUpperCase() + n.slice(1)}</button>`).join('')}</div></div>
-      <h4 style="margin-top:8px">Voce narrante</h4>
-      <div class="lt-riga"><span>Chi legge</span><div class="lt-scelte">${Object.entries(PROFILI).map(([k, p]) => `<button class="${(i.profilo || 'narratrice') === k ? 'on' : ''}" data-prof="${k}">${p.nome}</button>`).join('')}</div></div>
-      <div class="lt-riga"><span>Voce del dispositivo</span><select class="lt-voce" data-voce>
-        <option value="">Automatica (la più naturale)</option>${vociItaliane().map(v => `<option ${i.voceNome === v.name ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select></div>
-      <div class="lt-riga"><span>Velocità</span><div class="lt-scelte">${[[.85, 'Lenta'], [1, 'Normale'], [1.15, 'Veloce']].map(([v, n]) => `<button class="${(i.velocita || 1) === v ? 'on' : ''}" data-vel="${v}">${n}</button>`).join('')}</div></div>
-      <p class="lt-consiglio">Per una voce più naturale: <b>iPhone</b> Impostazioni → Accessibilità → Contenuti letti → Voci → Italiano → scarica «Federica» o «Luca» <i>migliorata</i>. <b>Android</b>: usa «Sintesi vocale di Google» con la voce in alta qualità. <b>PC</b>: apri il sito con <i>Microsoft Edge</i>, che ha voci «Natural».</p>` });
+` });
     if (!p) return;
     const sel = p.querySelector('[data-voce]');
     if (sel) {
@@ -343,13 +426,13 @@
 
   function azione(a) {
     if (a === 'esci') return esci();
-    if (!R.rend) return;
+    if (!R.rend || !R.pronto) return;   // il libro si sta ancora aprendo
     if (a === 'succ') { document.getElementById('lt-pannello').hidden = true; return R.rend.next(); }
     if (a === 'prec') { document.getElementById('lt-pannello').hidden = true; return R.rend.prev(); }
     if (a === 'aa') return pannelloImpostazioni();
     if (a === 'indice') return pannelloIndice();
     if (a === 'segno') return segnalibro();
-    if (a === 'voce') return leggiAdAltaVoce();
+    if (a === 'voce') { apriPlayer(); if (!R.voce) leggiAdAltaVoce(); return; }
   }
   function tasti(e) {
     if (el.hidden) return;
@@ -367,7 +450,7 @@
   function chiudi(silenzioso) {
     R.voce = false; try { speechSynthesis.cancel(); } catch { /* */ }
     if (R.book) { try { R.book.destroy(); } catch { /* */ } }
-    R.book = R.rend = null; R.b = null; R.locOk = false;
+    R.book = R.rend = null; R.b = null; R.locOk = false; R.pronto = false;
     if (!el.hidden) { el.hidden = true; el.innerHTML = ''; document.body.classList.remove('bloccato'); }
   }
 
