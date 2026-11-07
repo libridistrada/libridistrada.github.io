@@ -115,13 +115,21 @@
     const cfi = loc.start.cfi;
     let p = loc.start.percentage || 0;
     if (R.locOk) p = R.book.locations.percentageFromCfi(cfi) || p;
+    // il libro è finito all'ultima pagina, o quando si arriva ai crediti finali (Wikisource mette «Informazioni» in fondo)
+    const voceFine = R.book.navigation && R.book.navigation.get(loc.start.href);
+    const ultimaSezione = R.book.spine && loc.start.index >= R.book.spine.length - 1;
+    const finito = !!(loc.atEnd || (ultimaSezione && voceFine && /^(informazioni|colophon|licenza|crediti)/i.test(voceFine.label.trim())));
+    if (finito) p = 1;
     const tutte = store.get('pos', {});
-    tutte[R.b.id] = { cfi, p, t: Date.now() };
+    const prima = tutte[R.b.id] || {};
+    tutte[R.b.id] = { cfi, p, t: Date.now(), ...(finito || prima.fine ? { fine: prima.fine || Date.now() } : {}) };
     store.set('pos', tutte);
+    if (finito && !prima.fine) toast('Hai finito il libro! Lo trovi tra i «Letti» nella tua libreria');
     const perc = document.getElementById('lt-perc'), cur = document.getElementById('lt-cursore'), resto = document.getElementById('lt-resto');
-    if (perc) perc.textContent = R.locOk ? Math.round(p * 100) + '%' : '';
+    if (perc) perc.textContent = R.locOk || finito ? Math.round(p * 100) + '%' : '';
     if (cur && R.locOk) cur.value = Math.round(p * 1000);
-    if (resto && R.locOk) { const n = R.book.locations.length(); const min = Math.max(1, Math.round((1 - p) * n * 1600 / 5.5 / 230)); resto.textContent = min > 90 ? `${Math.round(min / 60)} ore alla fine` : `${min} min alla fine`; }
+    if (resto && finito) resto.textContent = 'Libro finito ✓';
+    else if (resto && R.locOk) { const n = R.book.locations.length(); const min = Math.max(1, Math.round((1 - p) * n * 1600 / 5.5 / 230)); resto.textContent = min > 90 ? `${Math.round(min / 60)} ore alla fine` : `${min} min alla fine`; }
     const capEl = document.getElementById('lt-cap');
     if (capEl) {
       const voce = R.book.navigation && R.book.navigation.get(loc.start.href);

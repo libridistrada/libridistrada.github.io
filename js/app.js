@@ -62,8 +62,25 @@
   const S = { cat: null, libri: [], per: new Map(), server: null, online: null, filtro: null };
   const store = {
     get(k, d) { try { return JSON.parse(localStorage.getItem('lds:' + k)) ?? d; } catch { return d; } },
-    set(k, v) { try { localStorage.setItem('lds:' + k, JSON.stringify(v)); } catch { /* privato */ } },
+    set(k, v) { if (k === 'pos') memoPos = null; try { localStorage.setItem('lds:' + k, JSON.stringify(v)); } catch { /* privato */ } },
   };
+  // a che punto sono con ogni libro: { p: 0..1, fine: data in cui l'ho finito }. Letta una volta per disegno.
+  let memoPos = null;
+  const posizioni = () => { if (!memoPos) { memoPos = store.get('pos', {}); setTimeout(() => (memoPos = null), 0); } return memoPos; };
+  const letto = id => !!(posizioni()[id] || {}).fine;
+  function statoLettura(id) {
+    const x = posizioni()[id];
+    if (!x) return { p: 0, testo: 'Da leggere' };
+    if (x.fine) return { p: 1, letto: true, testo: 'Letto' };
+    const p = x.p || 0;
+    return p > .005 ? { p, testo: `Letto al ${Math.max(1, Math.round(p * 100))}%` } : { p: 0, testo: 'Appena iniziato' };
+  }
+  function segnaLetto(id, si) {
+    const t = store.get('pos', {});
+    if (si) t[id] = { ...(t[id] || {}), p: 1, fine: Date.now(), t: Date.now() };
+    else if (t[id]) { delete t[id].fine; t[id].p = Math.min(t[id].p || 0, .99); if (!t[id].cfi) delete t[id]; }
+    store.set('pos', t);
+  }
 
   // ---------------------------------------------------------------- libri salvati sul telefono (IndexedDB)
   const db = (() => {
@@ -111,7 +128,7 @@
     freccia: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
     avanti: '<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>',
   };
-  const progresso = id => (store.get('pos', {})[id] || {}).p || 0;
+  const progresso = id => { const x = posizioni()[id] || {}; return x.fine ? 1 : x.p || 0; };
 
   // ---------------------------------------------------------------- copertina: poster grafico contemporaneo
   // [sfondo, accento, testo]. Le raccolte a tema hanno tavolozze proprie, gli altri libri pescano tra quelle vivaci.
@@ -155,8 +172,11 @@
     const [p1, p2, p3] = tavolozza(b);
     const h = hash(b.id);
     const lt = b.t.length > 46 ? 'lunghissimo' : b.t.length > 26 ? 'lungo' : '';
-    const pr = opt.progresso ? progresso(b.id) : 0;
-    const extra = (b.nuovo ? '<span class="bollino">Nuovo</span>' : '') + (pr > .01 ? `<span class="barra-lettura"><i style="width:${Math.round(pr * 100)}%"></i></span>` : '');
+    const fatto = letto(b.id);
+    const pr = !fatto && opt.progresso ? progresso(b.id) : 0;
+    const extra = (b.nuovo && !fatto ? '<span class="bollino">Nuovo</span>' : '')
+      + (fatto ? `<span class="timbro-letto">${ico.ok} Letto</span>` : '')
+      + (pr > .01 ? `<span class="perc-lettura">${Math.round(pr * 100)}%</span><span class="barra-lettura"><i style="width:${Math.round(pr * 100)}%"></i></span>` : '');
     const titolo = b.t.replace(/\s*\([^)]*\)\s*$/, '');   // via le note di edizione: «Fosca (1869)» -> «Fosca»
     const d = durata(b);
     if (b.cov === 1) {   // il libro ha una copertina o un'illustrazione sua: si vede quella
@@ -175,7 +195,7 @@
   // i colori per aloni e sfondi seguono la copertina
   const coloriCopertina = b => { const [p1, p2] = tavolozza(b); return [p1, p2, p2]; };
   const tessera = (b, opt) => `<a class="libro" href="#/libro/${encodeURIComponent(b.id)}" aria-label="${esc(b.t)}, di ${esc(autori(b))}">
-    ${copertina(b, opt)}${opt && opt.didascalia ? `<span class="sotto-titolo">${esc(b.t)}<span>${esc(autori(b))}</span></span>` : ''}</a>`;
+    ${copertina(b, opt)}${opt && opt.didascalia ? `<span class="sotto-titolo">${esc(b.t)}<span>${esc(autori(b))}</span>${opt.stato ? (st => `<em class="stato-lettura${st.letto ? ' letto' : ''}">${st.letto ? ico.ok + ' ' : ''}${st.testo}</em>`)(statoLettura(b.id)) : ''}</span>` : ''}</a>`;
 
   function fila(titolo, libri, opt = {}) {
     if (!libri.length) return '';
@@ -275,7 +295,7 @@
   function home() {
     document.title = 'Libri di strada';
     const vv = vetrina();
-    const inLettura = Object.entries(store.get('pos', {})).sort((a, b) => b[1].t - a[1].t).map(([id]) => S.per.get(id)).filter(Boolean);
+    const inLettura = Object.entries(store.get('pos', {})).filter(([, x]) => !x.fine).sort((a, b) => b[1].t - a[1].t).map(([id]) => S.per.get(id)).filter(Boolean);
     const nuovi = S.libri.filter(b => b.nuovo).sort((a, b) => (b.agg || '').localeCompare(a.agg || ''));
     const piuLetti = [...S.libri].sort((a, b) => (b.v || 0) - (a.v || 0));
     let html = '';
@@ -380,14 +400,20 @@
   async function mia() {
     document.title = 'La mia libreria · Libri di strada';
     const salvati = (await db.keys()).map(id => S.per.get(id)).filter(Boolean);
-    const pos = store.get('pos', {});
-    const inLettura = Object.entries(pos).sort((a, b) => b[1].t - a[1].t).map(([id]) => S.per.get(id)).filter(Boolean);
+    const pos = Object.entries(store.get('pos', {})).sort((a, b) => (b[1].fine || b[1].t) - (a[1].fine || a[1].t));
+    const inLettura = pos.filter(([, x]) => !x.fine).map(([id]) => S.per.get(id)).filter(Boolean);
+    const finiti = pos.filter(([, x]) => x.fine).map(([id]) => S.per.get(id)).filter(Boolean);
+    const h2 = (t, n) => `<h2 class="mia-h2">${t}<span>${n}</span></h2>`;
+    const o = { didascalia: true, progresso: true, stato: true };
     app.innerHTML = `<div class="pagina"><h1>La mia libreria</h1>
       <p class="intro">Resta su questo telefono, senza account: i libri salvati si leggono anche senza Internet.</p>
-      ${inLettura.length ? `<h2 style="font:600 22px/1.2 var(--display);margin:10px 0 16px">Sto leggendo</h2>
-        <div class="griglia" style="margin-bottom:40px">${inLettura.map(b => tessera(b, { didascalia: true, progresso: true })).join('')}</div>` : ''}
-      <h2 style="font:600 22px/1.2 var(--display);margin:10px 0 16px">Salvati sul telefono</h2>
-      ${salvati.length ? `<div class="griglia">${salvati.map(b => tessera(b, { didascalia: true })).join('')}</div>`
+      <div class="mia-conti"><div><b>${inLettura.length}</b><span>in lettura</span></div><div class="ok"><b>${finiti.length}</b><span>letti</span></div><div><b>${salvati.length}</b><span>salvati</span></div></div>
+      ${inLettura.length ? `${h2('Sto leggendo', inLettura.length)}
+        <div class="griglia" style="margin-bottom:40px">${inLettura.map(b => tessera(b, o)).join('')}</div>` : ''}
+      ${finiti.length ? `${h2(ico.ok + ' Letti', finiti.length)}
+        <div class="griglia" style="margin-bottom:40px">${finiti.map(b => tessera(b, o)).join('')}</div>` : ''}
+      ${h2('Salvati sul telefono', salvati.length)}
+      ${salvati.length ? `<div class="griglia">${salvati.map(b => tessera(b, o)).join('')}</div>`
         : '<div class="vuoto"><b>Nessun libro salvato</b>Apri un libro e premi «Salva» per leggerlo anche offline.</div>'}
       <p class="muted" style="margin-top:36px;font-size:13px">Per averla come un'app: su iPhone Condividi → «Aggiungi alla schermata Home»; su Android ⋮ → «Installa app».</p></div>`;
   }
@@ -412,8 +438,9 @@
           <p class="chi">di <b>${esc(autori(b))}</b>${vita(b)}${b.y ? ` · ${b.y}` : ''}${durata(b) ? ` · <span class="durata-testo">${durata(b)} di lettura</span>` : ''}</p>
           <div class="etichette">${rac}<span class="etichetta">${esc(b.c)}</span>${(b.sf || []).map(n => `<a class="etichetta c" style="--c:${(CATEGORIE[n] || [, , '#777'])[2]}" href="#/categoria/${encodeURIComponent(n)}">${esc(n)}</a>`).join('')}${b.sc ? '<span class="etichetta">Edizione originale scansionata</span>' : ''}${b.nostra ? '<span class="etichetta">Edizione Libri di strada</span>' : ''}</div>
           <div class="bottoni">
-            ${b.e ? `<a class="btn primario" href="#/leggi/${encodeURIComponent(b.id)}">${ico.play} ${pr > .01 ? `Riprendi (${Math.round(pr * 100)}%)` : 'Leggi ora'}</a>` : ''}
+            ${b.e ? `<a class="btn primario" href="#/leggi/${encodeURIComponent(b.id)}">${ico.play} ${letto(b.id) ? 'Rileggi' : pr > .01 ? `Riprendi (${Math.round(pr * 100)}%)` : 'Leggi ora'}</a>` : ''}
             ${b.e ? `<button class="btn secondario" data-salva>${salvato ? ico.ok + ' Salvato' : ico.salva + ' Salva'}</button>` : ''}
+            <button class="btn secondario${letto(b.id) ? ' letto-on' : ''}" data-letto title="Tocca per cambiare">${letto(b.id) ? ico.ok + ' Letto' : 'Segna come letto'}</button>
           </div></div></div>
       <div class="scheda-corpo"><div>
           <h3>${b.tr ? 'Trama' : b.inc ? 'Comincia così' : 'Il libro'}</h3>
@@ -448,6 +475,7 @@
     el.querySelectorAll('[data-scarica]').forEach(a => a.addEventListener('click', () => toast('Scaricamento avviato')));
     const sv = el.querySelector('[data-salva]');
     if (sv) bottoneSalva(sv, b);
+    el.querySelector('[data-letto]').onclick = () => { const si = !letto(b.id); segnaLetto(b.id, si); toast(si ? 'Segnato come letto: lo trovi tra i «Letti»' : 'Tolto dai letti'); scheda(b.id); };
   }
   function chiudiScheda() {
     const el = $('#scheda');
@@ -661,7 +689,7 @@
     vai();
   }
 
-  window.LDS = { S, esc, toast, conta, datiEpub, db, store, salvaSulTelefono, bottoneSalva, ico, chiudiScheda, copertina, tavolozza, durata, autori };
+  window.LDS = { S, esc, toast, statoLettura, conta, datiEpub, db, store, salvaSulTelefono, bottoneSalva, ico, chiudiScheda, copertina, tavolozza, durata, autori };
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
   // parte quando tutti i file del sito sono caricati (admin, caffè, movimento…)
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', avvio); else avvio();

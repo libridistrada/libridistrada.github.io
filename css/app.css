@@ -288,3 +288,21 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .cond-stampa h2 { width: 100%; margin: 0 0 2px; font: 600 18px/1 var(--display); }
 .cond-stampa a { color: var(--gold); text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 760px) { .cond-griglia { grid-template-columns: 1fr; } .cond-qr { max-width: 320px; margin: 0 auto; } }
+
+/* stato di lettura: timbro «Letto», percentuale, conti della mia libreria */
+.poster .timbro-letto { position: absolute; z-index: 4; top: 6%; left: 7%; display: inline-flex; align-items: center; gap: 1.4cqi; padding: 2cqi 3.6cqi 2cqi 2.6cqi; border-radius: 99px;
+  background: #19c37d; color: #04140c; font: 800 5.4cqi/1 var(--ui); letter-spacing: .04em; text-transform: uppercase; box-shadow: 0 1.5cqi 4cqi rgba(0, 0, 0, .45); }
+.poster .timbro-letto svg { width: 6cqi; height: 6cqi; fill: none; stroke: currentColor; stroke-width: 3.4; }
+.poster .perc-lettura { position: absolute; z-index: 4; right: 6%; bottom: 5.5%; padding: 1.4cqi 2.8cqi; border-radius: 99px; background: rgba(0, 0, 0, .72); color: #fff; font: 700 5cqi/1 var(--ui); }
+.stato-lettura { display: block; margin-top: 4px; font: 600 12px/1.2 var(--ui); font-style: normal; color: var(--gold, #ffbe0b); }
+.stato-lettura.letto { color: #3ddc97; }
+.stato-lettura svg { width: 12px; height: 12px; vertical-align: -2px; fill: none; stroke: currentColor; stroke-width: 3; }
+.mia-conti { display: flex; gap: 12px; margin: 6px 0 30px; flex-wrap: wrap; }
+.mia-conti div { min-width: 110px; padding: 14px 18px; border-radius: 16px; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); }
+.mia-conti b { display: block; font: 600 30px/1 var(--display); }
+.mia-conti span { font-size: 13px; color: var(--muted, #aaa); }
+.mia-conti .ok b { color: #3ddc97; }
+.mia-h2 { display: flex; align-items: center; gap: 10px; font: 600 22px/1.2 var(--display); margin: 10px 0 16px; }
+.mia-h2 svg { width: 22px; height: 22px; fill: none; stroke: #3ddc97; stroke-width: 2.6; }
+.mia-h2 span { font: 600 13px/1 var(--ui); padding: 5px 9px; border-radius: 99px; background: rgba(255, 255, 255, .08); color: var(--muted, #aaa); }
+.btn.letto-on { color: #3ddc97; }

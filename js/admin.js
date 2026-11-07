@@ -83,8 +83,16 @@
     f.onsubmit = async e => {
       e.preventDefault();
       const out = document.getElementById('esito-s');
-      try { await api('POST', '/admin/config', { sostieni: leggiF() }); out.textContent = 'Salvato: il sito si aggiorna subito.'; window.LDSSostieni.ricarica(); }
-      catch (err) { out.textContent = err.message; }
+      const d = leggiF();
+      out.style.color = '#ff6b6b';
+      if (d.attivo && !d.link) { out.textContent = 'Per accendere il pulsante serve il tuo link (es. https://buymeacoffee.com/tuonome): senza link resta spento.'; return; }
+      try {
+        const r = await api('POST', '/admin/config', { sostieni: d });
+        const acceso = r && r.sostieni ? r.sostieni.attivo : d.attivo;
+        out.style.color = '#3ddc97';
+        out.textContent = acceso ? 'Salvato e acceso: il pulsante compare subito sul sito (ricarica la pagina per vederlo).' : 'Salvato: il pulsante è spento.';
+        window.LDSSostieni.ricarica();
+      } catch (err) { out.textContent = err.message; }
     };
     document.getElementById('prova').onclick = () => window.LDSSostieni.prova({ ...leggiF(), attivo: true, link: leggiF().link || 'https://buymeacoffee.com/' });
   }
