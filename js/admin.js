@@ -65,7 +65,7 @@
     const s = (await api('GET', '/admin/config')).sostieni;
     const ck = (n, v, t, d) => `<label class="spunta interruttore"><input type="checkbox" name="${n}" ${v ? 'checked' : ''}><span><b>${t}</b><small>${d}</small></span></label>`;
     corpo.innerHTML = `<form class="modulo" id="fs">
-      ${ck('attivo', s.attivo, 'Pulsante acceso', 'Spento, non compare da nessuna parte del sito.')}
+      ${ck('attivo', s.attivo, 'Pulsante acceso', 'Quando è spento non compare da nessuna parte del sito.')}
       <label>Il tuo link (Buy Me a Coffee, PayPal.me o Ko-fi)<input name="link" value="${esc(s.link)}" placeholder="https://buymeacoffee.com/libridistrada" inputmode="url"></label>
       <label>Testo del pulsante<input name="testo" value="${esc(s.testo)}" maxlength="60"></label>
       <label>Messaggio del popup<textarea name="messaggio" rows="3" maxlength="400">${esc(s.messaggio)}</textarea></label>

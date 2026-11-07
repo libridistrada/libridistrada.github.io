@@ -43,8 +43,8 @@
 
   // ---- il tema segue la fila al centro dello schermo
   const TEMI = [
-    [/horror|brividi|gialli/i, 'horror'], [/roma/i, 'roma'], [/esoterismo|religione|mondi fantastici/i, 'esoterismo'],
-    [/lingue|dialetti|stranieri/i, 'lingue'], [/guide|corsi|tecnologia|sport|lavoro|musica e spett/i, 'guide'],
+    [/horror|brividi|gialli/i, 'horror'], [/roma/i, 'roma'], [/esoterismo|religione|mondi fantastici|miti|leggende/i, 'esoterismo'],
+    [/lingue|dialetti|stranieri/i, 'lingue'], [/guide|corsi|tecnologia|sport|lavoro|musica e spett|fumetti|moda|collezion/i, 'guide'],
   ];
   const temaDi = t => (TEMI.find(([re]) => re.test(t)) || [, 'pagine'])[1];
   let corrente = '';

@@ -38,10 +38,13 @@
     'Corsi e professioni': ['#04172a', '#1565c0', '#64ffda'], 'Tecnologia e IA': ['#05051f', '#2d5bff', '#3affc3'],
     'Sport e benessere': ['#1f1405', '#ff6b00', '#c6ff00'], 'Musica e spettacolo': ['#1f0533', '#8338ec', '#ff006e'],
     'Lingue': ['#1f0533', '#c2187b', '#ffb703'], 'Guide di oggi': ['#05051f', '#2d5bff', '#3affc3'],
+    'Miti e leggende': ['#1a1205', '#9c6b0f', '#ffd166'], 'Collezionismo e hobby': ['#0b1a14', '#2a7d5c', '#9ef0c9'],
+    'Moda e stile': ['#24051a', '#c2185b', '#ffc2e2'], 'Fumetti e manga': ['#04121f', '#ff3d00', '#ffe600'],
   };
   // i reparti della libreria, come entrando in una grande libreria
   const REPARTI = [
     ['Di oggi', ['Tecnologia e IA', 'Sport e benessere', 'Musica e spettacolo', 'Corsi e professioni']],
+    ['Passioni', ['Miti e leggende', 'Fumetti e manga', 'Collezionismo e hobby', 'Moda e stile']],
     ['Generi', ['Avventura e pirati', 'Gialli e misteri', 'Fantascienza', 'Amore e passioni', 'Romanzi storici', 'Viaggi ed esplorazioni', 'Umorismo e satira']],
     ['Classici', ['I best seller di sempre', 'Classici stranieri', 'Greci e latini']],
     ['Narrativa e poesia', ['Romanzi', 'Racconti e novelle', 'Poesia', 'Teatro', 'Lettere']],
@@ -613,5 +616,6 @@
 
   window.LDS = { S, esc, toast, conta, datiEpub, db, store, salvaSulTelefono, ico, chiudiScheda, copertina, tavolozza, durata, autori };
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
-  avvio();
+  // parte quando tutti i file del sito sono caricati (admin, caffè, movimento…)
+  if (document.readyState === 'loading') addEventListener('DOMContentLoaded', avvio); else avvio();
 })();
