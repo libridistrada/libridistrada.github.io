@@ -151,34 +151,120 @@
     try { const c = R.rend.getContents()[0]; return c ? c.document.body.innerText.slice(0, 1500) : ''; } catch { return ''; }
   }
 
-  function voceItaliana() {
-    const v = speechSynthesis.getVoices();
-    return v.find(x => /^it/i.test(x.lang) && /google|enhanced|premium|alice|federica|luca/i.test(x.name)) || v.find(x => /^it/i.test(x.lang));
+  // ---------------------------------------------------------------- narratore
+  // Frasi intere (la voce fa da sola l'intonazione di virgole e incisi), pause scandite dalla punteggiatura,
+  // dialoghi e domande con un tono diverso, pagine girate da sole senza spezzare le frasi.
+  const PROFILI = {
+    narratrice: { nome: 'Narratrice', pitch: 1, rate: 0.98, genere: 'f' },
+    narratore: { nome: 'Narratore', pitch: 0.96, rate: 0.98, genere: 'm' },
+    bambini: { nome: 'Per bambini', pitch: 1.16, rate: 0.86, genere: 'f' },
+  };
+  const FEMMINILI = /elsa|isabella|federica|alice|paola|emma|bianca|carla|giulia|chiara|elena|irene|silvia|lucia|sara|female|donna/i;
+  const MASCHILI = /diego|luca|giuseppe|cosimo|calogero|benigno|gianni|marco|paolo|giorgio|rinaldo|male|uomo/i;
+  function vociItaliane() {
+    const q = v => (/natural|neural|premium|enhanced|migliorat|online|siri/i.test(v.name) ? 3 : /google/i.test(v.name) ? 2 : v.localService ? 1 : 0);
+    return speechSynthesis.getVoices().filter(v => /^it/i.test(v.lang)).sort((a, b) => q(b) - q(a));
   }
+  function voceScelta() {
+    const i = imp(), tutte = vociItaliane();
+    if (i.voceNome) { const v = tutte.find(x => x.name === i.voceNome); if (v) return v; }
+    const g = PROFILI[i.profilo || 'narratrice'].genere;
+    return tutte.find(v => (g === 'f' ? FEMMINILI : MASCHILI).test(v.name)) || tutte[0] || null;
+  }
+  if ('speechSynthesis' in window) { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => {}; }
+
+  const ROMANI = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+  const daRomano = r => [...r].reduce((t, c, k, a) => t + (ROMANI[c] < (ROMANI[a[k + 1]] || 0) ? -ROMANI[c] : ROMANI[c]), 0);
+  function pulisciPerVoce(t) {
+    return t
+      .replace(/\[\d+\]|\(\d+\)/g, '')                                                   // numeri di nota
+      .replace(/\b(Capitolo|Canto|Parte|Libro|Scena|Atto)\s+([IVXLCDM]{1,7})\b/g, (m, p, r) => `${p} ${daRomano(r)}`)
+      .replace(/\becc\.(?=\s|$)/gi, 'eccetera').replace(/\bpag\.\s*/gi, 'pagina ').replace(/\bSig\.\s*/g, 'Signor ').replace(/\bSig\.ra\s*/g, 'Signora ')
+      .replace(/\bDott\.\s*/g, 'Dottor ').replace(/\bProf\.\s*/g, 'Professor ').replace(/\bS\. E\./g, 'Sua Eccellenza')
+      .replace(/[_*#]+/g, ' ').replace(/[ \t]+/g, ' ');
+  }
+  // divide in frasi, ricordando dove finiscono i paragrafi e cosa è dialogo
+  function frasiDi(testo) {
+    const out = [];
+    pulisciPerVoce(testo).split(/\n\s*\n|\n(?=\s*[—–-]\s)/).forEach(par => {
+      const p = par.replace(/\s+/g, ' ').trim();
+      if (!p) return;
+      const pezzi = p.match(/[^.!?…]+(?:[.!?…]+["»”’)]*|$)\s*/g) || [p];
+      pezzi.forEach((f, k) => {
+        const s = f.trim();
+        if (!s || !/[\p{L}\p{N}]/u.test(s)) return;
+        out.push({ t: s, fine: k === pezzi.length - 1, dialogo: /^[«"“]/.test(s) || /^[—–-]\s*[\p{Lu}«"]/u.test(s) });   // «— rispose lui» è narrazione
+      });
+    });
+    return out;
+  }
+  function parla(f, prof, voce) {
+    return new Promise(res => {
+      const u = new SpeechSynthesisUtterance(f.t.replace(/^[—–-]\s*/, ''));
+      u.lang = 'it-IT';
+      if (voce) u.voice = voce;
+      const vel = imp().velocita || 1;
+      let pitch = prof.pitch, rate = prof.rate * vel;
+      if (f.dialogo) pitch += 0.08;                         // le voci dei personaggi un po' diverse dalla narrazione
+      if (/\?["»”’)]*$/.test(f.t)) pitch += 0.05;            // le domande salgono
+      if (/!["»”’)]*$/.test(f.t)) { pitch += 0.04; rate *= 1.04; }
+      u.pitch = Math.min(2, pitch); u.rate = Math.max(0.5, Math.min(1.6, rate));
+      u.onend = () => res(true); u.onerror = () => res(false);
+      speechSynthesis.speak(u);
+    });
+  }
+  const attendi = ms => new Promise(r => setTimeout(r, ms));
+  const pausaDopo = f => (f.fine ? 650 : /[?!]["»”’)]*$/.test(f.t) ? 420 : /[.…]["»”’)]*$/.test(f.t) ? 330 : 120);
+
+  // testo dalla posizione attuale fino alla fine del capitolo, e quanti caratteri ci sono nella pagina visibile
+  async function testoDaQui() {
+    const loc = R.rend.location;
+    const a = await R.book.getRange(loc.start.cfi), z = await R.book.getRange(loc.end.cfi);
+    const doc = a.startContainer.ownerDocument;
+    const r = doc.createRange(); r.setStart(a.startContainer, a.startOffset); r.setEndAfter(doc.body.lastChild || doc.body);
+    const pagina = doc.createRange(); pagina.setStart(a.startContainer, a.startOffset); pagina.setEnd(z.startContainer, z.startOffset);
+    // i paragrafi diventano righe vuote, così le pause di fine paragrafo funzionano
+    const div = doc.createElement('div'); div.appendChild(r.cloneContents());
+    div.querySelectorAll('p, h1, h2, h3, h4, li, div, br').forEach(e => e.insertAdjacentText('afterend', '\n\n'));
+    return { testo: div.textContent, pagina: pagina.toString().replace(/\s+/g, ' ').length };
+  }
+
   async function leggiAdAltaVoce() {
-    if (!('speechSynthesis' in window)) return toast('Il telefono non sa leggere ad alta voce da qui');
+    if (!('speechSynthesis' in window)) return toast('Questo browser non sa leggere ad alta voce');
     if (R.voce) { R.voce = false; speechSynthesis.cancel(); aggiornaVoce(); return; }
     R.voce = true; aggiornaVoce();
-    const giro = async () => {
-      if (!R.voce || !R.rend) return;
-      const t = (await testoPagina()).replace(/\s+/g, ' ').trim();
-      const prossima = async () => { if (!R.voce) return; await R.rend.next(); setTimeout(giro, 250); };
-      if (!t) return prossima();
-      // frasi corte: le voci dei telefoni si interrompono con testi lunghi
-      const frasi = t.match(/[^.!?;:]+[.!?;:]*\s*/g) || [t];
-      let i = 0;
-      const dì = () => {
-        if (!R.voce) return;
-        if (i >= frasi.length) return prossima();
-        const u = new SpeechSynthesisUtterance(frasi[i++]);
-        u.lang = 'it-IT'; const v = voceItaliana(); if (v) u.voice = v;
-        u.rate = imp().velocita || 1;
-        u.onend = dì; u.onerror = () => { R.voce = false; aggiornaVoce(); };
-        speechSynthesis.speak(u);
-      };
-      dì();
-    };
-    giro();
+    const giro = R.giro = Symbol();
+    const prof = PROFILI[imp().profilo || 'narratrice'];
+    const voce = voceScelta();
+    if (!voce) toast('Nessuna voce italiana sul dispositivo: uso quella predefinita');
+    while (R.voce && R.giro === giro && R.rend) {
+      let blocco;
+      try { blocco = await testoDaQui(); } catch { blocco = { testo: await testoPagina(), pagina: 1e9 }; }
+      const frasi = frasiDi(blocco.testo);
+      let letti = 0, soglia = blocco.pagina;
+      for (const f of frasi) {
+        if (!R.voce || R.giro !== giro) return;
+        const ok = await parla(f, prof, voce);
+        if (!ok && !R.voce) return;
+        letti += f.t.length + 1;
+        if (letti >= soglia - 4) {                          // la pagina è finita: si gira, senza interrompere la voce
+          const prima = R.rend.location.start.cfi;
+          await R.rend.next();
+          try { const l = R.rend.location; const a = await R.book.getRange(l.start.cfi), z = await R.book.getRange(l.end.cfi);
+            const pr = a.startContainer.ownerDocument.createRange(); pr.setStart(a.startContainer, a.startOffset); pr.setEnd(z.startContainer, z.startOffset);
+            soglia += pr.toString().replace(/\s+/g, ' ').length; } catch { soglia = 1e9; }
+          if (R.rend.location.start.cfi === prima) soglia = 1e9;
+        }
+        await attendi(pausaDopo(f));
+      }
+      if (!R.voce || R.giro !== giro) return;
+      // fine del capitolo: al successivo, con una pausa più lunga
+      const sezione = R.rend.location.start.index;
+      await R.rend.next();
+      while (R.rend.location && R.rend.location.start.index === sezione && !R.rend.location.atEnd) await R.rend.next();
+      if (R.rend.location && R.rend.location.atEnd && R.rend.location.start.index === sezione) { R.voce = false; aggiornaVoce(); toast('Fine del libro'); return; }
+      await attendi(900);
+    }
   }
   function aggiornaVoce() {
     const b = el.querySelector('[data-a="voce"]');
@@ -200,8 +286,21 @@
       <div class="lt-riga"><span>Carattere</span><div class="lt-scelte">${Object.keys(CARATTERI).map(f => `<button class="${i.font === f ? 'on' : ''}" data-font="${f}" style="font-family:${CARATTERI[f]}">${f === 'OpenDyslexic' ? 'Dislessia' : f}</button>`).join('')}</div></div>
       <div class="lt-riga"><span>Interlinea</span><div class="lt-scelte">${[[1.4, 'Stretta'], [1.6, 'Normale'], [1.9, 'Ampia']].map(([v, n]) => `<button class="${i.riga === v ? 'on' : ''}" data-riga="${v}">${n}</button>`).join('')}</div></div>
       <div class="lt-riga"><span>Tema</span><div class="lt-scelte">${Object.entries(TEMI).map(([n, t]) => `<button class="tema ${i.tema === n ? 'on' : ''}" data-tema="${n}" style="background:${t.bg};color:${t.fg}">${n[0].toUpperCase() + n.slice(1)}</button>`).join('')}</div></div>
-      <div class="lt-riga"><span>Voce</span><div class="lt-scelte">${[[.85, 'Lenta'], [1, 'Normale'], [1.2, 'Veloce']].map(([v, n]) => `<button class="${(i.velocita || 1) === v ? 'on' : ''}" data-vel="${v}">${n}</button>`).join('')}</div></div>` });
+      <h4 style="margin-top:8px">Voce narrante</h4>
+      <div class="lt-riga"><span>Chi legge</span><div class="lt-scelte">${Object.entries(PROFILI).map(([k, p]) => `<button class="${(i.profilo || 'narratrice') === k ? 'on' : ''}" data-prof="${k}">${p.nome}</button>`).join('')}</div></div>
+      <div class="lt-riga"><span>Voce del dispositivo</span><select class="lt-voce" data-voce>
+        <option value="">Automatica (la più naturale)</option>${vociItaliane().map(v => `<option ${i.voceNome === v.name ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select></div>
+      <div class="lt-riga"><span>Velocità</span><div class="lt-scelte">${[[.85, 'Lenta'], [1, 'Normale'], [1.15, 'Veloce']].map(([v, n]) => `<button class="${(i.velocita || 1) === v ? 'on' : ''}" data-vel="${v}">${n}</button>`).join('')}</div></div>
+      <p class="lt-consiglio">Per una voce più naturale: <b>iPhone</b> Impostazioni → Accessibilità → Contenuti letti → Voci → Italiano → scarica «Federica» o «Luca» <i>migliorata</i>. <b>Android</b>: usa «Sintesi vocale di Google» con la voce in alta qualità. <b>PC</b>: apri il sito con <i>Microsoft Edge</i>, che ha voci «Natural».</p>` });
     if (!p) return;
+    const sel = p.querySelector('[data-voce]');
+    if (sel) {
+      sel.onclick = e => e.stopPropagation();
+      sel.onchange = () => {
+        sv('voceNome', sel.value);
+        if ('speechSynthesis' in window) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance('Ciao, sono la voce che leggerà il tuo libro.'); const v = voceScelta(); if (v) u.voice = v; u.lang = 'it-IT'; speechSynthesis.speak(u); }
+      };
+    }
     p.onclick = e => {
       const t = e.target.closest('button'); if (!t) return;
       if (t.dataset.dim) sv('dim', Math.min(200, Math.max(70, imp().dim + Number(t.dataset.dim))));
@@ -209,6 +308,7 @@
       if (t.dataset.riga) sv('riga', Number(t.dataset.riga));
       if (t.dataset.tema) sv('tema', t.dataset.tema);
       if (t.dataset.vel) sv('velocita', Number(t.dataset.vel));
+      if (t.dataset.prof) { sv('profilo', t.dataset.prof); sv('voceNome', ''); }
       applicaStile(); p.hidden = true; pannelloImpostazioni();
     };
   }

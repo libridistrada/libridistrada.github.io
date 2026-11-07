@@ -29,3 +29,5 @@
 .lt-lista { display: grid; margin-bottom: 14px; }
 .lt-lista button { text-align: left; padding: 10px 12px; border-radius: 8px; display: flex; justify-content: space-between; gap: 10px; }
 .lt-lista button:hover { background: var(--lt-ui); } .lt-lista small { color: var(--lt-muted); }
+.lt-voce { font: inherit; font-size: 13.5px; color: var(--lt-fg); background: var(--lt-ui); border: 0; border-radius: 9px; padding: 9px 10px; max-width: 100%; }
+.lt-consiglio { font-size: 12px; line-height: 1.5; color: var(--lt-muted); margin: 4px 0 0; }

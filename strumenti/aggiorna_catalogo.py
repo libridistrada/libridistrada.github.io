@@ -130,6 +130,33 @@ def main():
         if b.get("edizione_nostra"): v["nostra"] = 1
         if nuovo: v["nuovo"] = 1
         out.append({k: x for k, x in v.items() if x not in (None, "", [], 0) or k in ("id", "t", "a", "c")})
+    # audiolibri con voce umana: LibriVox in italiano (pubblico dominio), abbinati per titolo e autore
+    import re, unicodedata, urllib.request
+    def norm(t):
+        t = unicodedata.normalize("NFD", t or "").encode("ascii", "ignore").decode().lower()
+        t = re.sub(r"\((versione|version)[^)]*\)|\(.*?\)", "", t)
+        return re.sub(r"[^a-z0-9]+", " ", t).strip()
+    try:
+        url = ("https://archive.org/advancedsearch.php?q=collection%3Alibrivoxaudio+AND+language%3A%28Italian+OR+ita%29"
+               "&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&rows=500&output=json")
+        req = urllib.request.Request(url, headers={"User-Agent": "LibriDiStrada/1.0 (https://libridistrada.github.io)"})
+        lv = json.load(urllib.request.urlopen(req, timeout=60))["response"]["docs"]
+    except Exception as e:
+        lv = []
+        print("LibriVox non raggiungibile:", e)
+    abbinati = 0
+    for v in out:
+        tb = norm(v["t"])
+        cognomi = [norm(a).split()[-1] for a in v.get("a", []) if norm(a)]
+        for d in lv:
+            tl = norm(d.get("title"))
+            cr = norm(" ".join(d["creator"]) if isinstance(d.get("creator"), list) else d.get("creator") or "")
+            if tl and (tl == tb or (len(tb) > 6 and tl.startswith(tb))) and (not cognomi or any(c in cr for c in cognomi)):
+                v["au"] = d["identifier"]
+                abbinati += 1
+                break
+    print(f"audiolibri LibriVox abbinati: {abbinati} su {len(lv)}")
+
     os.makedirs(os.path.join(QUI, "data"), exist_ok=True)
     with open(os.path.join(QUI, "data", "catalogo.json"), "w", encoding="utf-8") as f:
         json.dump({"aggiornato": dt.datetime.now().isoformat(timespec="minutes"), "server": SERVER, "libri": out}, f, ensure_ascii=False, separators=(",", ":"))
