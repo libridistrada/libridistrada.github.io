@@ -216,14 +216,14 @@
     corpo.innerHTML = `<div class="admin-numeri">
         ${[['QR inquadrati', t.qr, '#ffbe0b'], ['Visite', t.visita + t.qr, '#3affc3'], ['Letture', t.lettura, '#ff3d7f'], ['Download', t.download, '#7aa2ff'], ['Libri in catalogo', s.catalogo, '#fff']]
           .map(([n, v, c]) => `<div class="admin-numero" style="--c:${c}"><b data-n="${v}">0</b><span>${n}</span></div>`).join('')}</div>
+      <h2 class="reparto">Offrimi un caffè</h2>
+      <div class="admin-numeri">${caffe(s)}</div>
+      <p class="muted admin-nota" style="margin-top:12px">Clic sul pulsante e passaggi al sito di pagamento. Se una persona ci clicca più volte in mezz'ora conta una volta sola; i tuoi clic mentre sei collegato qui non contano. Quanto è stato offerto davvero lo vedi solo nel tuo conto PayPal.</p>
       <h2 class="reparto">Ultimi 30 giorni</h2>
       ${giorni.length ? `<div class="admin-grafico">${giorni.map(([d, g]) => `<div class="colonna" title="${d}: ${g.qr} da QR, ${g.visita} altre visite, ${g.lettura} letture">
           <i class="v" style="height:${(g.visita / max * 100).toFixed(1)}%"></i><i class="q" style="height:${(g.qr / max * 100).toFixed(1)}%"></i><span>${d.slice(8)}</span></div>`).join('')}</div>
         <p class="muted" style="font-size:12.5px"><span class="legenda q"></span> aperture dal QR <span class="legenda v"></span> altre visite</p>`
         : '<div class="vuoto"><b>Ancora nessuna visita</b>Quando qualcuno apre il sito, i numeri compaiono qui.</div>'}
-      <h2 class="reparto">Offrimi un caffè</h2>
-      <div class="admin-numeri">${caffe(s)}</div>
-      <p class="muted admin-nota" style="margin-top:12px">Clic sul pulsante e passaggi al sito di pagamento. Se una persona ci clicca più volte in mezz'ora conta una volta sola; i tuoi clic mentre sei collegato qui non contano. Quanto è stato offerto davvero lo vedi solo nel tuo conto PayPal.</p>
       <h2 class="reparto">I libri più letti</h2>
       ${s.libri.length ? `<div class="admin-tabella">${s.libri.slice(0, 40).map((b, i) => `<div><span>${i + 1}</span><b>${esc(b.titolo)}</b><em>${esc((b.autori || []).join(', '))}</em>
         <small>${b.lettura || 0} letture · ${b.download || 0} download</small></div>`).join('')}</div>` : '<div class="vuoto"><b>Nessuna lettura ancora</b></div>'}
