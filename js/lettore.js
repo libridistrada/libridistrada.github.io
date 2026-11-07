@@ -158,18 +158,21 @@
   // dialoghi e domande con un tono diverso, pagine girate da sole senza spezzare le frasi.
   const PROFILI = {
     narratrice: { nome: 'Narratrice', pitch: 1, rate: 0.98, genere: 'f' },
-    narratore: { nome: 'Narratore', pitch: 0.96, rate: 0.98, genere: 'm' },
+    narratore: { nome: 'Narratore', pitch: 0.86, rate: 0.97, genere: 'm' },
     bambini: { nome: 'Per bambini', pitch: 1.16, rate: 0.86, genere: 'f' },
   };
   const FEMMINILI = /elsa|isabella|federica|alice|paola|emma|bianca|carla|giulia|chiara|elena|irene|silvia|lucia|sara|female|donna/i;
   const MASCHILI = /diego|luca|giuseppe|cosimo|calogero|benigno|gianni|marco|paolo|giorgio|rinaldo|male|uomo/i;
   function vociItaliane() {
-    const q = v => (/natural|neural|premium|enhanced|migliorat|online|siri/i.test(v.name) ? 3 : /google/i.test(v.name) ? 2 : v.localService ? 1 : 0);
+    // Google italiano per prima: è la più espressiva; poi le voci «naturali» o «migliorate» del sistema
+    const q = v => (/google/i.test(v.name) ? 4 : /natural|neural|premium|enhanced|migliorat|online|siri/i.test(v.name) ? 3 : v.localService ? 1 : 0);
     return speechSynthesis.getVoices().filter(v => /^it/i.test(v.lang)).sort((a, b) => q(b) - q(a));
   }
   function voceScelta() {
     const i = imp(), tutte = vociItaliane();
     if (i.voceNome) { const v = tutte.find(x => x.name === i.voceNome); if (v) return v; }
+    const google = tutte.find(v => /google/i.test(v.name));
+    if (google) return google;   // stessa voce per tutti i profili: cambiano tono e velocità
     const g = PROFILI[i.profilo || 'narratrice'].genere;
     return tutte.find(v => (g === 'f' ? FEMMINILI : MASCHILI).test(v.name)) || tutte[0] || null;
   }
