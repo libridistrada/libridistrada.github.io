@@ -1,8 +1,8 @@
 /* Libri di strada: funziona anche offline. Guscio in cache; catalogo e copertine aggiornati in sottofondo;
    i libri salvati stanno in IndexedDB (li gestisce la pagina), quelli dell'HP non passano da qui. */
-const V = 'lds-8';
+const V = 'lds-9';
 const GUSCIO = ['./', 'index.html', 'css/app.css', 'css/lettore.css', 'css/effetti.css', 'css/copertine.css', 'css/movimento.css', 'css/fondale.css', 'css/admin.css', 'css/lettore-libro.css', 'js/app.js', 'js/lettore.js', 'js/pubblica.js', 'js/movimento.js', 'js/fondale.js', 'js/sostieni.js', 'js/admin.js', 'js/ascolta.js',
-  'vendor/epub.min.js', 'vendor/jszip.min.js', 'manifest.webmanifest', 'img/icona-32.png', 'img/segnaposto.webp', 'img/targa.webp', 'img/targa-grande.webp',
+  'vendor/epub.min.js', 'vendor/jszip.min.js', 'manifest.webmanifest', 'img/icona-32.png', 'img/segnaposto.webp', 'img/logo-breve.webp', 'img/targa.webp', 'img/targa-grande.webp', 'img/qr.png',
   'font/fraunces-latin-wght-normal.woff2', 'font/inter-latin-wght-normal.woff2', 'font/literata-latin-wght-normal.woff2'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(GUSCIO)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== V).map(x => caches.delete(x)))).then(() => self.clients.claim())); });

@@ -36,7 +36,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .logo { display: flex; align-items: center; gap: 10px; font: 600 21px/1 var(--display); letter-spacing: -.01em; white-space: nowrap; }
 .logo i { font-weight: 400; color: var(--accent2); }
 .logo svg { width: 28px; height: 28px; stroke: var(--accent); stroke-width: 2.2; }
-.logo-pin { height: 46px; width: auto; margin: 6px -2px 0 0; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .45)); transform-origin: 50% 100%; transition: transform .5s cubic-bezier(.3, 1.6, .5, 1); }
+.logo-pin { height: 50px; width: auto; margin: 4px -4px 0 -6px; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .45)); transform-origin: 50% 100%; transition: transform .5s cubic-bezier(.3, 1.6, .5, 1); }
 .logo:hover .logo-pin { transform: translateY(-4px) rotate(-6deg); }
 .targa-nav { margin-left: auto; display: block; line-height: 0; transform: rotate(-1.2deg); transition: transform .4s cubic-bezier(.3, 1.6, .5, 1), filter .3s; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .5)); }
 .targa-nav img { height: 46px; width: auto; }
@@ -271,3 +271,20 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .modulo small { color: var(--muted); }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* ---------------------------------------------------------------- condividi */
+.cond-griglia { display: grid; grid-template-columns: minmax(260px, 420px) 1fr; gap: clamp(28px, 5vw, 70px); align-items: center; max-width: 1100px; margin: 0 auto; }
+.cond-qr { display: grid; justify-items: center; gap: 14px; }
+.cond-qr img { width: 100%; height: auto; border-radius: 22px; background: #fff; padding: 10px; box-shadow: 0 0 0 3px var(--accent), 0 24px 60px -12px rgba(224, 71, 47, .55); animation: qr-respira 4s ease-in-out infinite; }
+.cond-qr span { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+@keyframes qr-respira { 50% { box-shadow: 0 0 0 3px var(--accent), 0 30px 80px -10px rgba(224, 71, 47, .8); } }
+.cond-testo .occhiello { color: var(--gold); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; }
+.cond-testo h1 { font: 600 clamp(34px, 5vw, 58px)/1 var(--display); letter-spacing: -.02em; margin: 10px 0 16px; }
+.cond-testo h1 i { font-weight: 400; color: var(--accent2); }
+.cond-testo p { color: var(--fg2); line-height: 1.65; max-width: 560px; }
+.cond-bottoni { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 10px; }
+.cond-nota { font-size: 13px; color: var(--muted) !important; }
+.cond-stampa { margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 22px; }
+.cond-stampa h2 { width: 100%; margin: 0 0 2px; font: 600 18px/1 var(--display); }
+.cond-stampa a { color: var(--gold); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 760px) { .cond-griglia { grid-template-columns: 1fr; } .cond-qr { max-width: 320px; margin: 0 auto; } }

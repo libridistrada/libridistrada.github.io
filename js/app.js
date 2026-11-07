@@ -100,6 +100,7 @@
   const mb = n => n > 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(n / 1e3)) + ' KB';
   const vita = b => b.n || b.m ? ` (${b.n || '?'}–${b.m || '?'})` : '';
   const ico = {
+    condividi: '<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg>',
     play: '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z"/></svg>',
     info: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
     giu: '<svg viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>',
@@ -540,6 +541,35 @@
       <h2>Chi ospita</h2><p>Le pagine sono ospitate da GitHub Pages; i libri da un server privato collegato tramite Tailscale. Questi servizi, come ogni server web, ricevono l'indirizzo IP necessario a rispondere.</p>`],
   };
 
+  // ---------------------------------------------------------------- condividi: il QR viaggia con il link
+  const SITO = 'https://libridistrada.github.io/';
+  function condividi() {
+    document.title = 'Condividi · Libri di strada';
+    app.innerHTML = `<div class="pagina condividi"><div class="cond-griglia">
+      <div class="cond-qr"><img src="img/qr.png" alt="QR code di Libri di strada" width="560" height="560"><span>Inquadra con la fotocamera</span></div>
+      <div class="cond-testo">
+        <div class="occhiello">Passa parola</div>
+        <h1>Regala una libreria <i>a chi vuoi.</i></h1>
+        <p>Questo è il QR di Libri di strada, lo stesso degli adesivi per la città. Mandalo a chi ama leggere, mettilo in bacheca a scuola, in ufficio o nel tuo negozio: chi lo inquadra ha subito oltre 1000 libri gratis da leggere e ascoltare.</p>
+        <div class="cond-bottoni">
+          <button class="btn primario" data-c="condividi">${ico.condividi || ''}Condividi il link</button>
+          <button class="btn secondario" data-c="copia">Copia il link</button>
+          <a class="btn secondario" href="img/qr.png" download="libri-di-strada-qr.png">Scarica il QR</a>
+        </div>
+        <p class="cond-nota">Quando condividi il link, nell'anteprima di WhatsApp, Telegram o Facebook compare anche il QR.</p>
+        <div class="cond-stampa"><h2>Da stampare</h2>
+          <a href="stampa/locandina.pdf" download>Locandina A3 · PDF</a><a href="stampa/adesivo.pdf" download>Adesivo 10 × 14 cm · PDF</a></div>
+      </div></div></div>`;
+    app.querySelector('.cond-bottoni').addEventListener('click', async e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.c === 'condividi' && navigator.share) {
+        try { await navigator.share({ title: 'Libri di strada', text: 'Oltre 1000 libri gratis da leggere e ascoltare sul telefono, senza app e senza account.', url: SITO }); } catch { /* annullato */ }
+        return;
+      }
+      try { await navigator.clipboard.writeText(SITO); toast('Link copiato: incollalo dove vuoi'); } catch { toast(SITO); }
+    });
+  }
+
   // ---------------------------------------------------------------- navigazione
   function evidenzia(nome) { document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === nome)); }
   async function vai() {
@@ -566,6 +596,7 @@
     if (p1 === 'categoria') return elenco(p2, `${inCategoria(p2).length} libri`, inCategoria(p2));
     if (p1 === 'admin') return window.LDSAdmin(app);
     if (p1 === 'pubblica') return window.LDSPubblica ? window.LDSPubblica(app) : testo('Pubblica il tuo libro', '<p>In arrivo.</p>');
+    if (p1 === 'condividi') return condividi();
     if (PAGINE[p1]) return testo(...PAGINE[p1]);
     home();
   }
