@@ -1,5 +1,5 @@
 /* Lettore: occupa tutto lo schermo, i comandi si fanno da parte quando leggi */
-.lettore { position: fixed; inset: 0; z-index: 80; background: var(--lt-bg); color: var(--lt-fg); display: grid; grid-template-rows: auto 1fr auto; animation: dissolvi .25s both; }
+.lettore { position: fixed; inset: 0; z-index: 80; background: var(--lt-bg); color: var(--lt-fg); display: grid; grid-template-rows: auto 1fr auto; grid-template-columns: minmax(0, 1fr); overflow: hidden; animation: dissolvi .25s both; }
 .lettore.ui-chiaro { --lt-ui: rgba(0, 0, 0, .06); --lt-ui2: rgba(0, 0, 0, .1); --lt-muted: rgba(0, 0, 0, .5); --lt-pann: #fffdf8; }
 .lettore.ui-scuro { --lt-ui: rgba(255, 255, 255, .06); --lt-ui2: rgba(255, 255, 255, .12); --lt-muted: rgba(255, 255, 255, .5); --lt-pann: #1b1b20; }
 .lt-barra { display: flex; align-items: center; gap: 4px; padding: calc(6px + var(--safe-t)) 8px 6px; }
@@ -83,3 +83,7 @@
 .lt-pl-consiglio { font-size: 11.5px; line-height: 1.5; color: var(--lt-muted); margin: 14px 0 0; }
 .lt-player:not(.mini) ~ .lt-giu, .lettore:has(.lt-player.su:not(.mini)) .lt-giu { visibility: hidden; }
 @media (max-height: 640px) { .lt-pl-consiglio, .lt-pl-tempo > div:last-child { display: none; } }
+/* telefoni: la barra in alto non deve mai allargare la pagina */
+.lt-barra { min-width: 0; }
+@media (max-width: 480px) { .lt-su { gap: 0; padding-left: 4px; padding-right: 4px; } .lt-su .lt-btn { width: 38px; height: 38px; } .lt-su a.lt-btn { display: none; } .lt-titolo b { font-size: 13px; } .lt-titolo span { font-size: 11.5px; } }
+@media (max-width: 340px) { .lt-su .lt-btn { width: 34px; height: 34px; } }

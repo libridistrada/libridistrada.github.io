@@ -10,7 +10,7 @@
 .caffe-alto + .icon-btn { margin-left: 4px; }
 @keyframes caffe-entra { from { opacity: 0; transform: translateY(-10px) scale(.9); } }
 @keyframes vapore { 50% { transform: translateY(-1.5px); opacity: .5; } }
-@media (max-width: 720px) { .caffe-alto span { display: none; } .caffe-alto { padding: 0 9px; } }
+@media (max-width: 1000px) { .caffe-alto span { display: none; } .caffe-alto { padding: 0 9px; } }
 
 /* nella scheda e in fondo */
 .caffe-btn { background: linear-gradient(135deg, #ffcf5c, #ff9f1c); color: #2b1a00; }
