@@ -152,9 +152,9 @@ def main():
             tl = norm(d.get("title"))
             cr = norm(" ".join(d["creator"]) if isinstance(d.get("creator"), list) else d.get("creator") or "")
             if tl and (tl == tb or (len(tb) > 6 and tl.startswith(tb))) and (not cognomi or any(c in cr for c in cognomi)):
-                v["au"] = d["identifier"]
-                abbinati += 1
-                break
+                v.setdefault("au", []).append(d["identifier"])   # più letture dello stesso libro: si sceglie la voce
+        if v.get("au"):
+            abbinati += 1
     print(f"audiolibri LibriVox abbinati: {abbinati} su {len(lv)}")
 
     os.makedirs(os.path.join(QUI, "data"), exist_ok=True)
