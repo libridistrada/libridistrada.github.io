@@ -81,6 +81,8 @@
     R.rend = R.book.renderTo('lt-libro', { width: '100%', height: '100%', flow: 'paginated', spread: 'auto', minSpreadWidth: 900, allowScriptedContent: false });
     R.rend.themes.register('lds', LIBRO_CSS);
     R.rend.themes.select('lds');
+    // rete di sicurezza: se un capitolo ha un errore di XML, il browser mostra un riquadro rosso in inglese; lo togliamo
+    R.rend.hooks.content.register(c => { c.document.querySelectorAll('parsererror').forEach(e => e.remove()); });
     applicaStile();
     // tocchi e scorrimenti dentro la pagina del libro
     R.rend.hooks.content.register(c => {
