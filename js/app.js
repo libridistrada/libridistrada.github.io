@@ -306,6 +306,7 @@
     html += `<nav class="porte" aria-label="Raccolte">${Object.entries(RACCOLTE).map(([n, r]) => `<a class="porta" href="#/raccolta/${encodeURIComponent(n)}"
       style="--c0:${r.c[0]};--c1:${r.c[1]};--c2:${r.c[2]}">${r.i}<b>${esc(n)}</b><span>${inRaccolta(n).length || 'Presto'} libri</span></a>`).join('')}</nav>`;
     html += '<div class="file">';
+    html += fila('I 10 più letti', piuLetti, { colore: 'var(--gold)', top: true, max: 10 });   // sempre la prima fila
     html += fila('Continua a leggere', inLettura, { progresso: true, colore: 'var(--gold)' });
     if (nuovi.length) html += fila('Appena arrivati', nuovi, { colore: 'var(--gold)' });
     // scaffali con un aggancio di oggi: film e serie, brividi brevi, letture da una sera
@@ -322,7 +323,6 @@
     const raccolte = Object.entries(RACCOLTE);
     raccolte.forEach(([n, r], i) => {
       html += fila(n, inRaccolta(n), { sotto: r.d, colore: r.c[2], link: '#/raccolta/' + encodeURIComponent(n) });
-      if (i === 1) html += fila('I 10 più letti', piuLetti, { colore: 'var(--gold)', top: true, max: 10 });
     });
     for (const [, scaffali] of REPARTI) {
       for (const n of scaffali) {

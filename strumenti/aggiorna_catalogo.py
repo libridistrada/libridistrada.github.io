@@ -22,7 +22,7 @@ from PIL import Image
 QUI = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOME = os.path.expanduser("~")
 SSH = ["ssh", "-F", "none", "-i", os.path.join(HOME, ".ssh", "hplab_ed25519"), "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes",
-       "-o", "UserKnownHostsFile=" + os.path.join(HOME, ".ssh", "hplab_known_hosts"), "hplab@192.168.1.176"]
+       "-o", "UserKnownHostsFile=" + os.path.join(HOME, ".ssh", "hplab_known_hosts"), "hplab@100.107.170.27"]   # indirizzo Tailscale: non cambia se cambia la rete di casa
 SERVER = "https://hplab.taile5469d.ts.net/libri"
 STATO = "/var/lib/hplab/libri"
 LIBRI = "/srv/nas/Libri"
