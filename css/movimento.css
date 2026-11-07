@@ -58,7 +58,8 @@
 .anteprima-testa span { display: block; font-size: 13px; color: var(--fg2); }
 .anteprima-testa em { display: block; font-style: normal; font-size: 12px; color: var(--gold); margin-top: 6px; }
 .anteprima p { position: relative; font-size: 13.5px; line-height: 1.55; color: var(--fg2); margin: 14px 0; }
-.anteprima-tasti { position: relative; display: flex; gap: 8px; }
+.anteprima-tasti { position: relative; display: flex; flex-wrap: wrap; gap: 8px; }
+.anteprima-tasti .btn.on { color: #3affc3; }
 
 /* scheda: particelle e intestazione che segue il mouse */
 .particelle { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }

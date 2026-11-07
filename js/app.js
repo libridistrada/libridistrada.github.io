@@ -106,6 +106,7 @@
     giu: '<svg viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></svg>',
     salva: '<svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-6-4-6 4z"/></svg>',
     ok: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    libreria: '<svg viewBox="0 0 24 24"><path d="M4 4h3v16H4zM9 4h3v16H9zM14.5 5.5l2.9-.8 3.1 11.6-2.9.8z"/></svg>',
     x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     freccia: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
     avanti: '<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>',
@@ -446,12 +447,7 @@
     el.onclick = e => { if (e.target === el) chiudiScheda(); };
     el.querySelectorAll('[data-scarica]').forEach(a => a.addEventListener('click', () => toast('Scaricamento avviato')));
     const sv = el.querySelector('[data-salva]');
-    if (sv) sv.onclick = async () => {
-      if (await db.get(b.id)) { await db.del(b.id); sv.innerHTML = ico.salva + ' Salva'; toast('Tolto dal telefono'); return; }
-      sv.innerHTML = '<span class="anello" style="width:18px;height:18px;border-width:2px"></span> Salvo…';
-      try { await salvaSulTelefono(b); sv.innerHTML = ico.ok + ' Salvato'; toast('Salvato: si legge anche offline'); }
-      catch (e) { sv.innerHTML = ico.salva + ' Salva'; toast(e.message); }
-    };
+    if (sv) bottoneSalva(sv, b);
   }
   function chiudiScheda() {
     const el = $('#scheda');
@@ -483,6 +479,23 @@
     throw new Error(S.online === false ? 'La libreria di casa sta dormendo: questo libro non è nella riserva, riprova più tardi' : 'Non riesco a scaricare il libro, riprova');
   }
   async function salvaSulTelefono(b) { await db.put(b.id, await datiEpub(b)); }
+  // pulsante «Salva» uguale ovunque: scheda, anteprima, lettore. Tocca di nuovo per togliere il libro.
+  async function bottoneSalva(btn, b, { icona = ico.salva, testo = true } = {}) {
+    const scrivi = (svg, t) => (btn.innerHTML = svg + (testo ? ' ' + t : ''));
+    const mostra = ok => { scrivi(ok ? ico.ok : icona, ok ? 'Salvato' : 'Salva'); btn.classList.toggle('on', ok);
+      btn.setAttribute('aria-label', ok ? 'Salvato nella mia libreria: tocca per toglierlo' : 'Salva nella mia libreria'); btn.title = btn.getAttribute('aria-label'); };
+    mostra(!!(await db.get(b.id)));
+    btn.onclick = async e => {
+      e.preventDefault(); e.stopPropagation();
+      if (btn.dataset.lavoro) return;
+      if (await db.get(b.id)) { await db.del(b.id); mostra(false); toast('Tolto dalla tua libreria'); return; }
+      btn.dataset.lavoro = 1;
+      scrivi('<span class="anello" style="width:16px;height:16px;border-width:2px"></span>', 'Salvo…');
+      try { await salvaSulTelefono(b); mostra(true); toast('Salvato nella tua libreria: si legge anche offline'); }
+      catch (er) { mostra(false); toast(er.message); }
+      finally { delete btn.dataset.lavoro; }
+    };
+  }
 
   // ---------------------------------------------------------------- ricerca
   const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -646,7 +659,7 @@
     vai();
   }
 
-  window.LDS = { S, esc, toast, conta, datiEpub, db, store, salvaSulTelefono, ico, chiudiScheda, copertina, tavolozza, durata, autori };
+  window.LDS = { S, esc, toast, conta, datiEpub, db, store, salvaSulTelefono, bottoneSalva, ico, chiudiScheda, copertina, tavolozza, durata, autori };
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
   // parte quando tutti i file del sito sono caricati (admin, caffè, movimento…)
   if (document.readyState === 'loading') addEventListener('DOMContentLoaded', avvio); else avvio();

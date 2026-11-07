@@ -119,8 +119,11 @@
         <em>${[b.y, L.durata(b), b.c].filter(Boolean).map(esc).join(' · ')}</em></div></div>
       ${testo ? `<p>${esc(testo.slice(0, 220))}${testo.length > 220 ? '…' : ''}</p>` : ''}
       <div class="anteprima-tasti"><a class="btn primario piccolo" href="#/leggi/${encodeURIComponent(b.id)}">${L.ico.play} Leggi</a>
-        <a class="btn secondario piccolo" href="#/libro/${encodeURIComponent(b.id)}">${L.ico.info} Scheda</a></div>`;
+        <a class="btn secondario piccolo" href="#/libro/${encodeURIComponent(b.id)}">${L.ico.info} Scheda</a>
+        ${b.e ? '<button class="btn secondario piccolo" data-salva></button>' : ''}</div>`;
     document.body.appendChild(a);
+    const sv = a.querySelector('[data-salva]');
+    if (sv) L.bottoneSalva(sv, b);
     anteprima = a;
     requestAnimationFrame(() => a.classList.add('su'));
     a.addEventListener('mouseleave', chiudiAnteprima);

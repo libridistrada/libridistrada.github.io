@@ -37,6 +37,7 @@
         <div class="lt-titolo"><b>${esc(b.t)}</b><span id="lt-cap"></span></div>
         <a class="lt-btn" href="#/" aria-label="Torna alla home">${icone.casa}</a>
         <button class="lt-btn" data-a="indice" aria-label="Indice">${icone.indice}</button>
+        <button class="lt-btn" data-a="salva" aria-label="Salva nella mia libreria"></button>
         <button class="lt-btn" data-a="segno" aria-label="Segnalibro">${icone.segno}</button>
         <button class="lt-btn" data-a="voce" aria-label="Leggi ad alta voce">${icone.voce}</button>
         <button class="lt-btn" data-a="aa" aria-label="Impostazioni di lettura">${icone.aa}</button>
@@ -52,6 +53,8 @@
     el.hidden = false;
     document.body.classList.add('bloccato');
     el.onclick = e => { const a = e.target.closest('[data-a]'); if (a) azione(a.dataset.a); };
+    const sv = el.querySelector('[data-a="salva"]');
+    if (b.e) L.bottoneSalva(sv, b, { icona: L.ico.libreria, testo: false }); else sv.remove();
   }
 
   function applicaStile() {

@@ -33,7 +33,7 @@
     guscio(app, `<form class="modulo admin-accesso" id="f" autocomplete="on">
       <p class="intro">${attivazione ? 'Primo accesso: scrivi il <b>codice di attivazione</b> e scegli il tuo nome utente e la password (almeno 10 caratteri). La password non viene mai salvata in chiaro.' : 'Accedi per gestire la libreria.'}</p>
       ${attivazione ? '<label>Codice di attivazione<input name="codice" required autocomplete="one-time-code" placeholder="XXXX-XXXX-XXXX" style="text-transform:uppercase;letter-spacing:.1em"></label>' : ''}
-      <label>Nome utente<input name="utente" required autocomplete="username"></label>
+      <label>Nome utente<input name="utente" required autocomplete="username" title="Da 3 a 40 caratteri: lettere, numeri e . _ @ - (niente spazi)" placeholder="es. Francesco.Rossi">${attivazione ? '<small class="muted" style="display:block;margin-top:6px">Niente spazi: lettere, numeri e . _ @ -</small>' : ''}</label>
       <label>Password<input name="password" type="password" required autocomplete="${attivazione ? 'new-password' : 'current-password'}" minlength="${attivazione ? 10 : 1}"></label>
       ${attivazione ? '<label>Ripeti la password<input name="password2" type="password" required autocomplete="new-password"></label>' : ''}
       <div><button class="btn primario" type="submit">${attivazione ? 'Crea e entra' : 'Entra'}</button></div><p class="muted" id="esito"></p></form>`);
@@ -41,13 +41,15 @@
       e.preventDefault();
       const d = Object.fromEntries(new FormData(e.target));
       const esito = document.getElementById('esito');
-      if (attivazione && d.password !== d.password2) return (esito.textContent = 'Le due password non coincidono.');
+      esito.style.color = '';
+      if (!/^[A-Za-z0-9._@-]{3,40}$/.test(d.utente || '')) { esito.style.color = '#ff6b6b'; return (esito.textContent = 'Nome utente: da 3 a 40 caratteri, solo lettere, numeri e . _ @ - (niente spazi).'); }
+      if (attivazione && d.password !== d.password2) { esito.style.color = '#ff6b6b'; return (esito.textContent = 'Le due password non coincidono.'); }
       esito.textContent = 'Un momento…';
       try {
         const r = await api('POST', attivazione ? '/admin/attiva' : '/admin/entra', attivazione ? { codice: d.codice, utente: d.utente, password: d.password } : { utente: d.utente, password: d.password });
         tok.set(r.token);
         window.LDSAdmin(app);
-      } catch (err) { esito.textContent = err.message; }
+      } catch (err) { esito.textContent = err.message; esito.style.color = '#ff6b6b'; }
     };
   }
 
