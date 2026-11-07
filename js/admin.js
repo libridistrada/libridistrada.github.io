@@ -63,12 +63,49 @@
     catch (err) { if (!tok.get()) return window.LDSAdmin(app); corpo.innerHTML = `<div class="vuoto"><b>Qualcosa non va</b>${esc(err.message)}</div>`; }
   }
 
+  // ---- «Offrimi un caffè»: importi pronti + offerta libera, più modi di pagare (tutti link: il pagamento avviene altrove)
+  const METODI = {
+    stripe: ['Carta, Apple Pay o Google Pay', 'con Stripe', 'Chi dona non ha bisogno di nessun conto. Commissione circa 1,5% + 0,25 € a donazione, i soldi arrivano sul tuo IBAN.'],
+    paypal: ['PayPal', 'PayPal.me', 'Chi dona deve avere un conto PayPal. Per ricevere dal pubblico PayPal chiede un conto Business, gratuito anche senza partita IVA.'],
+    bmc: ['Buy Me a Coffee', 'pagina tua', 'Chi dona paga con carta o PayPal sul sito di Buy Me a Coffee e sceglie lì la cifra. Commissione 5% più quella della carta.'],
+    kofi: ['Ko-fi', 'pagina tua', 'Come Buy Me a Coffee: chi dona sceglie la cifra sulla tua pagina Ko-fi.'],
+  };
+  const leggiImporti = t => [...new Set(String(t).split(/[\s,;€]+/).filter(Boolean).map(Number))].filter(n => Number.isInteger(n)).sort((a, b) => a - b);
+
+  // stessa logica del server: serve per l'anteprima del popup prima di salvare
+  function pubblico(d) {
+    const out = [], imp = d.importi;
+    const st = d.metodi.stripe;
+    if (st.attivo) { const per = {}; imp.forEach(i => { if (st.link[i]) per[i] = st.link[i]; }); if (Object.keys(per).length || st.libero) out.push({ tipo: 'stripe', nome: METODI.stripe[0], importi: per, libero: st.libero }); }
+    const pp = d.metodi.paypal;
+    if (pp.attivo && pp.nome) { const b = 'https://paypal.me/' + pp.nome, per = {}; imp.forEach(i => { per[i] = `${b}/${i}EUR`; }); out.push({ tipo: 'paypal', nome: 'PayPal', importi: per, libero: b }); }
+    for (const k of ['bmc', 'kofi']) if (d.metodi[k].attivo && d.metodi[k].link) out.push({ tipo: k, nome: METODI[k][0], importi: {}, libero: d.metodi[k].link });
+    return out;
+  }
+
   async function sostieni(corpo) {
     const s = (await api('GET', '/admin/config')).sostieni;
+    const m = s.metodi_admin || { stripe: { link: {} }, paypal: {}, bmc: {}, kofi: {} };
+    const stripeLink = { ...(m.stripe.link || {}) };
     const ck = (n, v, t, d) => `<label class="spunta interruttore"><input type="checkbox" name="${n}" ${v ? 'checked' : ''}><span><b>${t}</b><small>${d}</small></span></label>`;
+    const metodo = (k, campi) => `<fieldset class="admin-dove admin-metodo"><legend>${METODI[k][0]} <small>${METODI[k][1]}</small></legend>
+        ${ck(k + '_attivo', m[k] && m[k].attivo, 'Acceso', METODI[k][2])}${campi}</fieldset>`;
     corpo.innerHTML = `<form class="modulo" id="fs">
       ${ck('attivo', s.attivo, 'Pulsante acceso', 'Quando è spento non compare da nessuna parte del sito.')}
-      <label>Il tuo link (Buy Me a Coffee, PayPal.me o Ko-fi)<input name="link" value="${esc(s.link)}" placeholder="https://buymeacoffee.com/libridistrada" inputmode="url"></label>
+      <label>Importi in euro<input name="importi" value="${esc((s.importi || [2, 3, 5]).join(', '))}" inputmode="numeric" placeholder="2, 3, 5"></label>
+      <p class="muted admin-nota">Da 1 a 6 cifre separate da virgola. Su 1 € le commissioni si prendono quasi 40 centesimi: meglio partire da 2 €.</p>
+      ${ck('libera', s.libera !== false, 'Offerta libera', 'Un tasto in più: chi dona sceglie la cifra sul sito di pagamento.')}
+      ${metodo('stripe', `<div id="stripe-importi"></div>
+        <label>Link Stripe per l'offerta libera <small>(facoltativo)</small><input name="stripe_libero" value="${esc(m.stripe.libero || '')}" placeholder="https://buy.stripe.com/…" inputmode="url"></label>
+        <details class="admin-aiuto"><summary>Come si creano i link Stripe</summary><ol>
+          <li>Apri un account su stripe.com (anche da privato) e collega il tuo IBAN.</li>
+          <li>Vai su <b>Payment Links</b> → <b>Nuovo</b>: prodotto «Un caffè per Libri di strada», prezzo 2 €. Ripeti per ogni importo.</li>
+          <li>Per l'offerta libera scegli «Il cliente sceglie quanto pagare».</li>
+          <li>Copia ogni link (inizia con https://buy.stripe.com/) e incollalo qui accanto alla sua cifra.</li></ol></details>`)}
+      ${metodo('paypal', `<label>Il tuo nome PayPal.me<input name="paypal_nome" value="${esc(m.paypal.nome || '')}" placeholder="libridistrada" autocapitalize="off"></label>
+        <p class="muted admin-nota" id="pp-anteprima"></p>`)}
+      ${metodo('bmc', `<label>La tua pagina<input name="bmc_link" value="${esc(m.bmc.link || '')}" placeholder="https://buymeacoffee.com/tuonome" inputmode="url"></label>`)}
+      ${metodo('kofi', `<label>La tua pagina<input name="kofi_link" value="${esc(m.kofi.link || '')}" placeholder="https://ko-fi.com/tuonome" inputmode="url"></label>`)}
       <label>Testo del pulsante<input name="testo" value="${esc(s.testo)}" maxlength="60"></label>
       <label>Messaggio del popup<textarea name="messaggio" rows="3" maxlength="400">${esc(s.messaggio)}</textarea></label>
       <fieldset class="admin-dove"><legend>Dove compare</legend>
@@ -78,14 +115,46 @@
       <div class="bottoni"><button class="btn primario" type="submit">Salva</button><button class="btn secondario" type="button" id="prova">Vedi il popup</button></div>
       <p class="muted" id="esito-s"></p></form>`;
     const f = document.getElementById('fs');
-    const leggiF = () => { const d = new FormData(f); return { attivo: d.has('attivo'), link: d.get('link').trim(), testo: d.get('testo'), messaggio: d.get('messaggio'),
-      in_alto: d.has('in_alto'), popup: d.has('popup'), scheda: d.has('scheda') }; };
+    // un campo Stripe per ogni importo; se cambi gli importi i link già scritti restano
+    const campiStripe = () => {
+      f.querySelectorAll('[name^="stripe_imp_"]').forEach(x => { stripeLink[x.name.slice(11)] = x.value.trim(); });
+      document.getElementById('stripe-importi').innerHTML = leggiImporti(f.importi.value).filter(i => i >= 1 && i <= 100).map(i =>
+        `<label>Link Stripe per ${i} €<input name="stripe_imp_${i}" value="${esc(stripeLink[i] || '')}" placeholder="https://buy.stripe.com/…" inputmode="url"></label>`).join('');
+    };
+    const anteprimaPP = () => {
+      const n = f.paypal_nome.value.trim().replace(/^(https?:\/\/)?(www\.)?paypal\.me\//i, '').split('/')[0];
+      document.getElementById('pp-anteprima').textContent = n ? 'Link pronti: ' + leggiImporti(f.importi.value).map(i => `paypal.me/${n}/${i}EUR`).join(' · ') + (f.libera.checked ? ` · offerta libera: paypal.me/${n}` : '') : 'Scrivi solo il nome: i link con la cifra li prepara il sito.';
+    };
+    campiStripe(); anteprimaPP();
+    f.importi.addEventListener('input', () => { campiStripe(); anteprimaPP(); });
+    f.paypal_nome.addEventListener('input', anteprimaPP);
+    f.libera.addEventListener('change', anteprimaPP);
+
+    const leggiF = () => {
+      const d = new FormData(f), imp = leggiImporti(d.get('importi'));
+      const link = {}; imp.forEach(i => { const v = (d.get('stripe_imp_' + i) || '').trim(); if (v) link[i] = v; });
+      return { attivo: d.has('attivo'), importi: imp, libera: d.has('libera'), testo: d.get('testo'), messaggio: d.get('messaggio'),
+        in_alto: d.has('in_alto'), popup: d.has('popup'), scheda: d.has('scheda'),
+        metodi: { stripe: { attivo: d.has('stripe_attivo'), link, libero: d.get('stripe_libero').trim() },
+          paypal: { attivo: d.has('paypal_attivo'), nome: d.get('paypal_nome').trim().replace(/^(https?:\/\/)?(www\.)?paypal\.me\//i, '').split('/')[0] },
+          bmc: { attivo: d.has('bmc_attivo'), link: d.get('bmc_link').trim() }, kofi: { attivo: d.has('kofi_attivo'), link: d.get('kofi_link').trim() } } };
+    };
+    const problema = d => {
+      if (!d.importi.length || d.importi.length > 6 || d.importi[0] < 1 || d.importi[d.importi.length - 1] > 100) return 'Metti da 1 a 6 importi interi fra 1 e 100 euro, per esempio 2, 3, 5.';
+      const M = d.metodi;
+      if (M.stripe.attivo && !Object.keys(M.stripe.link).length && !M.stripe.libero) return 'Stripe è acceso ma non hai incollato nessun link: aggiungine almeno uno o spegnilo.';
+      if (M.paypal.attivo && !M.paypal.nome) return 'PayPal è acceso: scrivi il tuo nome PayPal.me o spegnilo.';
+      if (M.bmc.attivo && !M.bmc.link) return 'Buy Me a Coffee è acceso: incolla la tua pagina o spegnilo.';
+      if (M.kofi.attivo && !M.kofi.link) return 'Ko-fi è acceso: incolla la tua pagina o spegnilo.';
+      if (d.attivo && !pubblico(d).length) return 'Per accendere il pulsante serve almeno un modo di pagare acceso e completo.';
+      return '';
+    };
     f.onsubmit = async e => {
       e.preventDefault();
       const out = document.getElementById('esito-s');
       const d = leggiF();
       out.style.color = '#ff6b6b';
-      if (d.attivo && !d.link) { out.textContent = 'Per accendere il pulsante serve il tuo link (es. https://buymeacoffee.com/tuonome): senza link resta spento.'; return; }
+      const p = problema(d); if (p) { out.textContent = p; return; }
       try {
         const r = await api('POST', '/admin/config', { sostieni: d });
         const acceso = r && r.sostieni ? r.sostieni.attivo : d.attivo;
@@ -94,7 +163,12 @@
         window.LDSSostieni.ricarica();
       } catch (err) { out.textContent = err.message; }
     };
-    document.getElementById('prova').onclick = () => window.LDSSostieni.prova({ ...leggiF(), attivo: true, link: leggiF().link || 'https://buymeacoffee.com/' });
+    document.getElementById('prova').onclick = () => {
+      const d = leggiF();
+      let metodi = pubblico(d);
+      if (!metodi.length) metodi = [{ tipo: 'paypal', nome: 'PayPal', importi: Object.fromEntries(d.importi.map(i => [i, `https://paypal.me/tuonome/${i}EUR`])), libero: 'https://paypal.me/tuonome' }];
+      window.LDSSostieni.prova({ ...d, attivo: true, metodi });
+    };
   }
 
   // locandina e adesivo: stanno sull'HP e si scaricano solo da qui, non sono sul sito pubblico
