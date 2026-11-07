@@ -66,6 +66,7 @@
 .admin-dove { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; } .admin-dove legend { font-size: 13.5px; color: var(--fg2); margin-bottom: 8px; }
 .admin-numeri { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .admin-numero { padding: 18px; border-radius: 14px; background: var(--bg3); box-shadow: inset 0 0 0 1px var(--line), 0 0 40px -24px var(--c); }
+.admin-numero small { display: block; margin-top: 6px; font-size: 12px; color: var(--muted); opacity: .85; }
 .admin-numero b { display: block; font: 700 34px/1 var(--display); color: var(--c); } .admin-numero span { font-size: 13px; color: var(--muted); }
 .admin-grafico { display: flex; align-items: flex-end; gap: 4px; height: 180px; padding: 12px; border-radius: 14px; background: var(--bg3); }
 .admin-grafico .colonna { flex: 1; max-width: 34px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; position: relative; min-width: 6px; }

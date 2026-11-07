@@ -198,6 +198,16 @@
     };
   }
 
+  // clic su «Offrimi un caffè» e passaggi a ogni modo di pagare acceso (o già usato in passato)
+  function caffe(s) {
+    const t = s.totali, NOMI = { paypal: 'Passaggi a PayPal', stripe: 'Passaggi a Stripe', bmc: 'Passaggi a Buy Me a Coffee', kofi: 'Passaggi a Ko-fi' };
+    const ultimi = e => Object.entries(s.giorni).sort((a, b) => a[0].localeCompare(b[0])).slice(-30).reduce((n, [, g]) => n + (g[e] || 0), 0);
+    const tipi = Object.keys(NOMI).filter(k => (s.pagamenti || []).includes(k) || t[k]);
+    const quota = k => t.caffe ? ` · ${Math.round(t[k] / t.caffe * 100)}% dei clic` : '';
+    return [['caffe', 'Clic su «Offrimi un caffè»', '#ffbe0b', ''], ...tipi.map(k => [k, NOMI[k], k === 'paypal' ? '#7aa2ff' : '#3affc3', quota(k)])]
+      .map(([k, n, c, q]) => `<div class="admin-numero" style="--c:${c}"><b data-n="${t[k] || 0}">0</b><span>${n}</span><small>${ultimi(k)} negli ultimi 30 giorni${q}</small></div>`).join('');
+  }
+
   async function statistiche(corpo) {
     const s = await api('GET', '/admin/statistiche');
     const giorni = Object.entries(s.giorni).sort((a, b) => a[0].localeCompare(b[0])).slice(-30);
@@ -211,6 +221,9 @@
           <i class="v" style="height:${(g.visita / max * 100).toFixed(1)}%"></i><i class="q" style="height:${(g.qr / max * 100).toFixed(1)}%"></i><span>${d.slice(8)}</span></div>`).join('')}</div>
         <p class="muted" style="font-size:12.5px"><span class="legenda q"></span> aperture dal QR <span class="legenda v"></span> altre visite</p>`
         : '<div class="vuoto"><b>Ancora nessuna visita</b>Quando qualcuno apre il sito, i numeri compaiono qui.</div>'}
+      <h2 class="reparto">Offrimi un caffè</h2>
+      <div class="admin-numeri">${caffe(s)}</div>
+      <p class="muted admin-nota" style="margin-top:12px">Clic sul pulsante e passaggi al sito di pagamento. Se una persona ci clicca più volte in mezz'ora conta una volta sola; i tuoi clic mentre sei collegato qui non contano. Quanto è stato offerto davvero lo vedi solo nel tuo conto PayPal.</p>
       <h2 class="reparto">I libri più letti</h2>
       ${s.libri.length ? `<div class="admin-tabella">${s.libri.slice(0, 40).map((b, i) => `<div><span>${i + 1}</span><b>${esc(b.titolo)}</b><em>${esc((b.autori || []).join(', '))}</em>
         <small>${b.lettura || 0} letture · ${b.download || 0} download</small></div>`).join('')}</div>` : '<div class="vuoto"><b>Nessuna lettura ancora</b></div>'}

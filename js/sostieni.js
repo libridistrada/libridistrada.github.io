@@ -10,6 +10,8 @@
   const CON = { stripe: 'con carta, Apple Pay o Google Pay', paypal: 'con PayPal', bmc: 'con Buy Me a Coffee', kofi: 'con Ko-fi' };
   const DOVE = { stripe: 'Stripe', paypal: 'PayPal', bmc: 'Buy Me a Coffee', kofi: 'Ko-fi' };
   let cfg = null;
+  // conteggio anonimo (come visite e letture); i clic dell'amministratore collegato e le anteprime non contano
+  const conta = e => { try { if (sessionStorage.getItem('lds:admin')) return; } catch { /* */ } L.conta(e); };
 
   // server vecchio (un solo link) o nuovo (importi e metodi): qui diventano la stessa cosa
   const metodi = c => (c && c.metodi && c.metodi.length ? c.metodi
@@ -25,6 +27,7 @@
     const a = e.target.closest('[data-caffe]');
     if (!a || !cfg) return;
     e.preventDefault();
+    conta('caffe');
     popup(true);
   });
 
@@ -49,9 +52,9 @@
   function popup(forza, prova) {
     const vero = cfg;
     if (prova) cfg = { ...(cfg || {}), ...prova };   // anteprima dall'area admin, con i valori del modulo
-    try { mostra(forza); } finally { if (prova) cfg = vero; }
+    try { mostra(forza, !!prova); } finally { if (prova) cfg = vero; }
   }
-  function mostra(forza) {
+  function mostra(forza, anteprima) {
     const M = metodi(cfg);
     if (!cfg || !cfg.attivo || !M.length || (!cfg.popup && !forza) || document.querySelector('.caffe-popup')) return;
     if (!forza) {
@@ -84,7 +87,7 @@
         b.classList.toggle('on', on); b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1;
       });
       const pronti = M.map(m => ({ m, url: scelta === 'libera' ? m.libero : m.importi && m.importi[scelta] })).filter(x => x.url);
-      modi.innerHTML = pronti.map(({ m, url }, i) => `<a class="btn ${i ? 'secondario' : 'primario'} caffe-vai" href="${esc(url)}" target="_blank" rel="noopener">${
+      modi.innerHTML = pronti.map(({ m, url }, i) => `<a class="btn ${i ? 'secondario' : 'primario'} caffe-vai" data-tipo="${m.tipo}" href="${esc(url)}" target="_blank" rel="noopener">${
         scelta === 'libera' ? 'Scegli tu quanto ' + CON[m.tipo] : `Offri ${scelta} € ` + CON[m.tipo]}</a>`).join('');
       const siti = [...new Set(pronti.map(x => DOVE[x.m.tipo]))];
       el.querySelector('.caffe-sicuro').textContent = `Paghi sul sito di ${siti.join(' o ')}: Libri di strada non vede mai i tuoi dati di pagamento.`;
@@ -99,7 +102,8 @@
       if (e.target === el) return chiudi();
       const b = e.target.closest('.caffe-cifre button');
       if (b) { scelta = b.dataset.v; disegna(); return; }
-      if (e.target.closest('.caffe-vai')) setTimeout(chiudi, 300);
+      const vai = e.target.closest('.caffe-vai');
+      if (vai) { if (!anteprima) conta(vai.dataset.tipo); setTimeout(chiudi, 300); }
     };
     el.addEventListener('keydown', e => {
       if (e.key === 'Escape') return chiudi();
