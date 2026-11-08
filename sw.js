@@ -1,7 +1,7 @@
 /* Libri di strada: funziona anche offline. Guscio in cache; catalogo e copertine aggiornati in sottofondo;
    i libri salvati stanno in IndexedDB (li gestisce la pagina), quelli dell'HP non passano da qui. */
-const V = 'lds-23';
-const GUSCIO = ['./', 'index.html', 'css/app.css', 'css/lettore.css', 'css/effetti.css', 'css/copertine.css', 'css/movimento.css', 'css/fondale.css', 'css/admin.css', 'css/lettore-libro.css', 'js/app.js', 'js/lettore.js', 'js/pubblica.js', 'js/movimento.js', 'js/fondale.js', 'js/sostieni.js', 'js/admin.js', 'js/ascolta.js',
+const V = 'lds-24';
+const GUSCIO = ['./', 'index.html', 'css/app.css', 'css/lettore.css', 'css/effetti.css', 'css/copertine.css', 'css/movimento.css', 'css/fondale.css', 'css/admin.css', 'css/lettore-libro.css', 'js/app.js', 'js/lettore.js', 'js/pubblica.js', 'js/movimento.js', 'js/fondale.js', 'js/sostieni.js', 'js/avvisi.js', 'js/admin.js', 'js/ascolta.js',
   'vendor/epub.min.js', 'vendor/jszip.min.js', 'manifest.webmanifest', 'img/icona-32.png', 'img/segnaposto.webp', 'img/logo-breve.webp', 'img/targa.webp', 'img/targa-grande.webp', 'img/qr.png',
   'font/fraunces-latin-wght-normal.woff2', 'font/inter-latin-wght-normal.woff2', 'font/literata-latin-wght-normal.woff2'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(GUSCIO)).then(() => self.skipWaiting())); });
@@ -24,4 +24,23 @@ self.addEventListener('fetch', e => {
   const pagina = e.request.mode === 'navigate' || u.pathname.endsWith('/') || u.pathname.endsWith('.html');
   e.respondWith((pagina ? fetch(u.href, { cache: 'no-cache', credentials: 'same-origin' }) : fetch(e.request)).then(r => { if (r.ok) { const copia = r.clone(); caches.open(V).then(c => c.put(e.request, copia)); } return r; })
     .catch(() => caches.match(e.request).then(r => r || caches.match('index.html'))));
+});
+
+// avvisi «libri nuovi»: arrivano cifrati dall'HP solo a chi li ha chiesti; al tocco si apre il sito
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { d = { testo: e.data ? e.data.text() : '' }; }
+  const dove = new URL(d.url || './#/', self.registration.scope);
+  const url = dove.origin === location.origin ? dove.href : self.registration.scope;
+  e.waitUntil(self.registration.showNotification(d.titolo || 'Libri di strada', {
+    body: d.testo || 'Ci sono libri nuovi da leggere', icon: 'img/icona-192.png', badge: 'img/icona-192.png', tag: 'libri-nuovi', data: { url } }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || self.registration.scope;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(lista => {
+    const aperta = lista.find(c => c.url.startsWith(self.registration.scope));
+    if (aperta) return aperta.focus().then(c => (c && c.navigate ? c.navigate(url) : c));
+    return self.clients.openWindow(url);
+  }));
 });

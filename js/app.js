@@ -308,7 +308,7 @@
     html += '<div class="file">';
     html += fila('I 10 più letti', piuLetti, { colore: 'var(--gold)', top: true, max: 10 });   // sempre la prima fila
     html += fila('Continua a leggere', inLettura, { progresso: true, colore: 'var(--gold)' });
-    if (nuovi.length) html += fila('Appena arrivati', nuovi, { colore: 'var(--gold)' });
+    if (nuovi.length) html += fila('Appena arrivati', nuovi, { colore: 'var(--gold)' }) + '<div class="avvisi-posto" data-avvisi></div>';
     // scaffali con un aggancio di oggi: film e serie, brividi brevi, letture da una sera
     const minuti = b => minutiLettura(b) || 9999;
     const FILM = /jekyll|sherlock|isola del tesoro|pinocchio|giro del mondo|corsaro nero|tigri di momp|promessi sposi|casa usher|cuore rivelatore|gatto nero|montecristo|dalla terra alla luna|isola misteriosa|ventimila leghe|cantico di natale|moschettieri|don chisciotte|frankenstein|dracula|amleto|romeo e giulietta|otello|macbeth|decameron|divina commedia|fu mattia pascal|piccolo lord|zanna bianca|robinson|gulliver|alice|le avventure di tom|^cuore$/i;
@@ -407,6 +407,7 @@
     const o = { didascalia: true, progresso: true, stato: true };
     app.innerHTML = `<div class="pagina"><h1>La mia libreria</h1>
       <p class="intro">Resta su questo telefono, senza account: i libri salvati si leggono anche senza Internet.</p>
+      <div class="avvisi-posto" data-avvisi></div>
       <div class="mia-conti"><div><b>${inLettura.length}</b><span>in lettura</span></div><div class="ok"><b>${finiti.length}</b><span>letti</span></div><div><b>${salvati.length}</b><span>salvati</span></div></div>
       ${inLettura.length ? `${h2('Sto leggendo', inLettura.length)}
         <div class="griglia" style="margin-bottom:40px">${inLettura.map(b => tessera(b, o)).join('')}</div>` : ''}
@@ -579,6 +580,7 @@
     privacy: ['Privacy', `<p><strong>In breve: non sappiamo chi sei e non vogliamo saperlo.</strong></p>
       <h2>Niente account, niente cookie, niente pubblicità</h2><p>Il sito non usa cookie, non ha pubblicità e non usa servizi di statistiche di terzi. I caratteri e il lettore sono dentro il sito: aprendolo non contatti Google o altri.</p>
       <h2>Cosa resta sul tuo telefono</h2><p>Il punto a cui sei arrivato, i segnalibri, le impostazioni di lettura e i libri che salvi restano <strong>solo sul tuo telefono</strong> (memoria del browser). Puoi cancellarli in ogni momento dalle impostazioni del browser.</p>
+      <h2>Avvisi dei libri nuovi</h2><p>Sono facoltativi: arrivano solo se premi «Avvisami» e lo consenti al tuo browser, al massimo uno a settimana. Per consegnarli la libreria di casa conserva solo l'indirizzo di consegna anonimo creato dal browser, senza nome, email o indirizzo IP, e lo cancella quando li disattivi. L'avviso viaggia cifrato attraverso il servizio di notifiche del tuo browser (Google per Chrome, Apple per Safari, Mozilla per Firefox), che non può leggerne il testo.</p>
       <h2>Cosa contiamo</h2><p>Per sapere se il progetto funziona contiamo, in forma anonima, quante volte il sito viene aperto, quante volte dal QR, quante volte un libro viene letto o scaricato e quante volte viene premuto «Offrimi un caffè». Non salviamo indirizzi IP né altri dati che possano identificarti: l'indirizzo serve solo, per qualche minuto e solo in memoria, a non contare due volte la stessa apertura.</p>
       <h2>Audiolibri</h2><p>Gli audiolibri con voce umana vengono da <a href="https://librivox.org" target="_blank" rel="noopener">LibriVox</a> e sono ospitati dall'Internet Archive: il tuo telefono li contatta solo quando premi «Ascolta». La voce narrante del lettore invece è quella del tuo dispositivo e funziona senza mandare il testo a nessuno.</p>
       <h2>Chi ospita</h2><p>Le pagine sono ospitate da GitHub Pages; i libri da un server privato collegato tramite Tailscale. Questi servizi, come ogni server web, ricevono l'indirizzo IP necessario a rispondere.</p>`],

@@ -161,3 +161,8 @@
 .admin-mesi em { min-width: 0; overflow-wrap: anywhere; } .admin-mesi small { align-self: center; }
 @media (max-width: 520px) { .admin-mesi > div { grid-template-columns: minmax(0, 1fr); gap: 2px; } .admin-mesi em, .admin-mesi small { grid-column: 1; grid-row: auto; } .admin-importi > div { grid-template-columns: 96px minmax(0, 1fr) 36px; } }
 .admin-mesi + .admin-nota { margin-top: 10px; }
+
+/* avvisi: anteprima della notifica */
+.avviso-anteprima { display: flex; gap: 12px; align-items: center; max-width: 460px; padding: 12px 14px; border-radius: 14px; background: #f4f1ea; color: #1f1b16; }
+.avviso-anteprima img { width: 40px; height: 40px; border-radius: 10px; flex: none; }
+.avviso-anteprima div { display: grid; gap: 2px; min-width: 0; font-size: 14px; } .avviso-anteprima span { color: #555; font-size: 13px; overflow-wrap: anywhere; }

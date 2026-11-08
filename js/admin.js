@@ -55,11 +55,11 @@
 
   // ---------------------------------------------------------------- pannello
   async function pannello(app, scheda = 'sostieni') {
-    guscio(app, `<nav class="admin-schede">${[['sostieni', 'Offrimi un caffè'], ['statistiche', 'Statistiche'], ['proposte', 'Proposte degli autori'], ['stampa', 'Da stampare']]
+    guscio(app, `<nav class="admin-schede">${[['sostieni', 'Offrimi un caffè'], ['statistiche', 'Statistiche'], ['avvisi', 'Avvisi'], ['proposte', 'Proposte degli autori'], ['stampa', 'Da stampare']]
       .map(([k, n]) => `<button class="filtro ${k === scheda ? 'on' : ''}" data-s="${k}">${n}</button>`).join('')}</nav><div id="admin-corpo"><div class="carica"><div class="anello"></div></div></div>`);
     app.querySelector('.admin-schede').onclick = e => { const b = e.target.closest('[data-s]'); if (b) pannello(app, b.dataset.s); };
     const corpo = document.getElementById('admin-corpo');
-    try { await ({ sostieni, statistiche, proposte, stampa }[scheda])(corpo, app); }
+    try { await ({ sostieni, statistiche, avvisi, proposte, stampa }[scheda])(corpo, app); }
     catch (err) { if (!tok.get()) return window.LDSAdmin(app); corpo.innerHTML = `<div class="vuoto"><b>Qualcosa non va</b>${esc(err.message)}</div>`; }
   }
 
@@ -223,6 +223,35 @@
         <em>${Object.keys(o).sort((a, b) => (a === 'libera') - (b === 'libera') || a - b).map(k => `${nome(k)} ×${o[k]}`).join(' · ')}</em>
         <small>circa ${stima(o).toLocaleString('it-IT')} €${o.libera ? ' + offerte libere' : ''}</small></div>`).join('')}</div>
       <p class="muted admin-nota">È la cifra scelta prima di andare su PayPal, non quella pagata: «circa» somma solo le cifre fisse. Le offerte arrivate davvero le vedi nel conto PayPal.</p>`;
+  }
+
+  // ---- avvisi «libri nuovi»: partono da soli il sabato mattina, se ci sono novità
+  async function avvisi(corpo) {
+    const s = await api('GET', '/admin/avvisi');
+    const data = d => new Date(d).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+    const a = s.anteprima, u = s.ultimo;
+    corpo.innerHTML = `<div class="admin-numeri"><div class="admin-numero" style="--c:#ffbe0b"><b>${s.iscritti}</b><span>Iscritti agli avvisi</span></div>
+        <div class="admin-numero" style="--c:#3affc3"><b>${a ? a.n : 0}</b><span>Libri nuovi da annunciare</span></div></div>
+      <form class="modulo" id="fa" style="margin-top:18px"><label class="spunta interruttore"><input type="checkbox" name="attivo" ${s.attivo ? 'checked' : ''}><span><b>Invio automatico</b>
+        <small>Il sabato mattina, una volta a settimana, solo se ci sono libri nuovi. Il prossimo: ${esc(data(s.prossimo))}.</small></span></label></form>
+      <h3 class="admin-sotto">Prossimo avviso</h3>
+      ${a ? `<div class="avviso-anteprima"><img src="img/icona-192.png" alt=""><div><b>${esc(a.titolo)}</b><span>${esc(a.testo)}</span></div></div>`
+        : '<p class="muted">Per ora non ci sono libri nuovi da annunciare: sabato non partirà niente.</p>'}
+      <div class="bottoni" style="margin-top:14px"><button class="btn secondario" id="invia-ora" ${a && s.iscritti ? '' : 'disabled'}>Invia adesso</button></div>
+      <p class="muted admin-nota" id="esito-a"></p>
+      <h3 class="admin-sotto">Ultimo invio</h3>
+      ${u ? `<p>${esc(u.quando.replace('T', ' '))} · «${esc(u.titolo)}» · consegnati ${u.consegnati}, non consegnati ${u.non_consegnati}${u.tolti ? ` (${u.tolti} iscritti non più attivi, tolti)` : ''}</p>` : '<p class="muted">Nessun avviso inviato finora.</p>'}
+      <p class="muted admin-nota" style="margin-top:16px">Ci si iscrive dal sito con «Avvisami» (in «La mia libreria» e sotto «Appena arrivati»). Per ogni iscritto l'HP tiene solo l'indirizzo di consegna anonimo del browser.</p>`;
+    corpo.querySelector('[name=attivo]').onchange = async e => {
+      try { await api('POST', '/admin/avvisi', { attivo: e.target.checked }); L.toast(e.target.checked ? 'Invio automatico acceso' : 'Invio automatico spento'); }
+      catch (err) { L.toast(err.message); e.target.checked = !e.target.checked; }
+    };
+    corpo.querySelector('#invia-ora').onclick = async e => {
+      if (!confirm(`Mandare adesso l'avviso a ${s.iscritti} iscritti?`)) return;
+      e.target.disabled = true;
+      try { await api('POST', '/admin/avvisi/invia', {}); L.toast('Avviso inviato'); avvisi(corpo); }
+      catch (err) { document.getElementById('esito-a').textContent = err.message; e.target.disabled = false; }
+    };
   }
 
   async function statistiche(corpo) {
