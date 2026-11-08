@@ -166,3 +166,11 @@
 .avviso-anteprima { display: flex; gap: 12px; align-items: center; max-width: 460px; padding: 12px 14px; border-radius: 14px; background: #f4f1ea; color: #1f1b16; }
 .avviso-anteprima img { width: 40px; height: 40px; border-radius: 10px; flex: none; }
 .avviso-anteprima div { display: grid; gap: 2px; min-width: 0; font-size: 14px; } .avviso-anteprima span { color: #555; font-size: 13px; overflow-wrap: anywhere; }
+
+/* registro delle offerte */
+.offerta-nuova { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 10px; align-items: end; margin: 16px 0 12px; }
+.offerta-nuova #esito-o { grid-column: 1 / -1; margin: 0; }
+.admin-offerte > div { grid-template-columns: 96px minmax(0, 1fr) auto; }
+.admin-offerte em { grid-column: 2; }
+@media (max-width: 760px) { .offerta-nuova { grid-template-columns: 1fr 1fr; } .offerta-nuova .btn { grid-column: 1 / -1; } }
+@media (max-width: 420px) { .offerta-nuova { grid-template-columns: 1fr; } .admin-offerte > div { grid-template-columns: minmax(0, 1fr) auto; } .admin-offerte span { grid-column: 1; } .admin-offerte b, .admin-offerte em { grid-column: 1; } .admin-offerte small { grid-column: 2; grid-row: 1 / 4; } }

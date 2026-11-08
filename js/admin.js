@@ -255,6 +255,41 @@
     };
   }
 
+  // registro delle offerte ricevute: le scrivi tu (PayPal non le comunica al sito); solo data, importo, metodo, nota
+  const euro = c => (c / 100).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
+  async function registroOfferte(box) {
+    let r;
+    try { r = await api('GET', '/admin/offerte'); } catch (e) { box.innerHTML = `<p class="muted">${esc(e.message)}</p>`; return; }
+    const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+    const max = Math.max(1, ...Object.values(r.mesi).map(m => m.centesimi));
+    const oggi = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+    box.innerHTML = `<div class="admin-numeri"><div class="admin-numero" style="--c:#3ddc97"><b>${euro(r.totale)}</b><span>Totale ricevuto</span><small>${r.n} offert${r.n === 1 ? 'a' : 'e'}</small></div></div>
+      ${Object.keys(r.mesi).length ? `<div class="admin-importi" style="margin-top:14px">${Object.entries(r.mesi).map(([m, v]) => `<div><span>${MESI[+m.slice(5) - 1]} ${m.slice(0, 4)}</span>
+        <i style="--w:${(v.centesimi / max * 100).toFixed(1)}%;background:linear-gradient(90deg,#3ddc97,#2ec4b6)"></i><b>${euro(v.centesimi)}</b></div>`).join('')}</div>` : ''}
+      <form class="modulo offerta-nuova" id="fo">
+        <label>Data<input type="date" name="data" value="${oggi}" max="${oggi}" required></label>
+        <label>Importo in euro<input name="importo" inputmode="decimal" placeholder="3" required></label>
+        <label>Metodo<select name="metodo">${Object.entries(r.metodi).map(([k, n]) => `<option value="${k}">${esc(n)}</option>`).join('')}</select></label>
+        <label>Nota <small>(facoltativa, senza nomi)</small><input name="nota" maxlength="80" placeholder="es. dal QR di via Giulia"></label>
+        <button class="btn primario" type="submit">Aggiungi offerta</button>
+        <p class="muted" id="esito-o"></p></form>
+      ${r.voci.length ? `<div class="admin-tabella admin-offerte">${r.voci.map(v => `<div><span>${esc(v.data.split('-').reverse().join('/'))}</span>
+        <b>${euro(v.centesimi)} · ${esc(r.metodi[v.metodo] || v.metodo)}</b><em>${esc(v.nota || '')}</em>
+        <small><button class="link" data-elimina="${esc(v.id)}">Elimina</button></small></div>`).join('')}</div>` : '<p class="muted">Nessuna offerta registrata: aggiungi la prima qui sopra.</p>'}`;
+    const f = box.querySelector('#fo');
+    f.onsubmit = async e => {
+      e.preventDefault();
+      try { await api('POST', '/admin/offerte', { data: f.data.value, importo: f.importo.value, metodo: f.metodo.value, nota: f.nota.value }); L.toast('Offerta registrata'); registroOfferte(box); }
+      catch (err) { const o = box.querySelector('#esito-o'); o.style.color = '#ff6b6b'; o.textContent = err.message; }
+    };
+    box.querySelectorAll('[data-elimina]').forEach(b => {
+      b.onclick = async () => {
+        if (!confirm('Eliminare questa offerta dal registro?')) return;
+        try { await api('POST', '/admin/offerte', { azione: 'elimina', id: b.dataset.elimina }); registroOfferte(box); } catch (err) { L.toast(err.message); }
+      };
+    });
+  }
+
   async function statistiche(corpo) {
     const s = await api('GET', '/admin/statistiche');
     const giorni = Object.entries(s.giorni).sort((a, b) => a[0].localeCompare(b[0])).slice(-30);
@@ -266,6 +301,7 @@
       <h2 class="reparto">Offrimi un caffè</h2>
       <div class="admin-numeri">${caffe(s)}</div>
       ${importiScelti(s)}
+      <h3 class="admin-sotto">Offerte ricevute</h3><div id="offerte"><p class="muted">Leggo il registro…</p></div>
       <p class="muted admin-nota" style="margin-top:12px">Clic sul pulsante e passaggi al sito di pagamento. Se una persona ci clicca più volte in mezz'ora conta una volta sola; i tuoi clic mentre sei collegato qui non contano. Quanto è stato offerto davvero lo vedi solo nel tuo conto PayPal.</p>
       <h2 class="reparto">Ultimi 30 giorni</h2>
       ${giorni.length ? `<div class="admin-grafico">${giorni.map(([d, g]) => `<div class="colonna" title="${d}: ${g.qr} da QR, ${g.visita} altre visite, ${g.lettura} letture">
@@ -276,6 +312,7 @@
       ${s.libri.length ? `<div class="admin-tabella">${s.libri.slice(0, 40).map((b, i) => `<div><span>${i + 1}</span><b>${esc(b.titolo)}</b><em>${esc((b.autori || []).join(', '))}</em>
         <small>${b.lettura || 0} letture · ${b.download || 0} download</small></div>`).join('')}</div>` : '<div class="vuoto"><b>Nessuna lettura ancora</b></div>'}
       <p class="muted" style="font-size:12.5px;margin-top:24px">Conteggi anonimi: nessun dato personale viene salvato.</p>`;
+    registroOfferte(document.getElementById('offerte'));
     corpo.querySelectorAll('[data-n]').forEach(el => { const fine = +el.dataset.n; let t0; const p = ts => { t0 = t0 || ts; const k = Math.min(1, (ts - t0) / 900);
       el.textContent = Math.round(fine * (1 - Math.pow(1 - k, 3))).toLocaleString('it-IT'); if (k < 1) requestAnimationFrame(p); }; requestAnimationFrame(p); });
   }
