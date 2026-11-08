@@ -9,6 +9,8 @@
   const RACCOLTE = {
     'Guide di oggi': { d: 'Intelligenza artificiale, sport, allenamento, cibo, spazio, musica: aggiornate ogni mese', c: ['#05051f', '#2d5bff', '#3affc3'],
       i: '<svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>' },
+    'Guide di viaggio': { d: 'Le città del mondo da scoprire: come muoversi, cosa vedere, dove mangiare. Anche senza rete, in viaggio', c: ['#04212b', '#0b8a8f', '#5ef2d6'],
+      i: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg>' },
     'Lingue': { d: 'Inglese, francese, tedesco, spagnolo, cinese, polacco e altre 20 lingue: corsi e frasari', c: ['#1f0533', '#c2187b', '#ffb703'],
       i: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/></svg>' },
     'Autori emergenti': { d: 'Libri di oggi, regalati da chi li ha scritti', c: ['#3a2304', '#c27c0e', '#ffcf5c'],
@@ -140,6 +142,7 @@
   ];
   const TAVOLOZZE_TEMA = {
     'Guide di oggi': [['#2d5bff', '#3affc3', '#ffffff'], ['#0b0b0b', '#c6ff00', '#ffffff'], ['#ff006e', '#ffbe0b', '#ffffff'], ['#8338ec', '#3affc3', '#ffffff'], ['#3affc3', '#05051f', '#05051f']],
+    'Guide di viaggio': [['#0b8a8f', '#ffd166', '#ffffff'], ['#04212b', '#5ef2d6', '#ffffff'], ['#f4a261', '#264653', '#ffffff'], ['#e76f51', '#fefae0', '#ffffff'], ['#2a9d8f', '#e9c46a', '#04212b']],
     'Lingue': [['#c2187b', '#ffb703', '#ffffff'], ['#ffb703', '#c2187b', '#1f0533'], ['#023e8a', '#ff5d8f', '#ffffff'], ['#06d6a0', '#073b4c', '#073b4c']],
     'Horror e fantastico': [['#0b0b0b', '#ff1f3d', '#f2f2f2'], ['#120a1f', '#9dff00', '#eeeeee'], ['#1a0005', '#ff4d6d', '#ffe5ec'], ['#000000', '#ff7b00', '#fff3e6']],
     'Roma': [['#e2552d', '#2b1a12', '#ffe9d6'], ['#f2a65a', '#7a1e12', '#2b0f08'], ['#ffd166', '#c0392b', '#1b0d08'], ['#7a1e12', '#ffb26b', '#fff1e3']],
