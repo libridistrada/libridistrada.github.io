@@ -15,6 +15,10 @@
   <meta property="og:url" content="https://libridistrada.github.io/">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
+  <script>/* telefoni con poca memoria o browser vecchi: niente sfondo animato, sfocature e animazioni (stessi libri, stesse funzioni) */
+  (function () { try { var n = navigator, v = /Chrome\/(\d+)/.exec(n.userAgent), m = n.deviceMemory;
+    if ((m && m <= 2) || (v && +v[1] < 100) || localStorage.getItem('lds:leggero') === 'true') document.documentElement.classList.add('leggero');
+  } catch (e) {} })();</script>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="img/icona-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="img/icona-180.png">
@@ -22,7 +26,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preload" href="font/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="font/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/app.css?v=1794043523">
+  <link rel="stylesheet" href="css/app.css?v=1794143149">
   <link rel="stylesheet" href="css/lettore.css?v=1794139420">
   <link rel="stylesheet" href="css/effetti.css?v=1794043523">
   <link rel="stylesheet" href="css/copertine.css?v=1794043523">
@@ -84,13 +88,13 @@
 
   <script src="vendor/jszip.min.js"></script>
   <script src="vendor/epub.min.js"></script>
-  <script src="js/app.js?v=1794142030"></script>
+  <script src="js/app.js?v=1794143149"></script>
   <script src="js/lettore.js?v=1794142030"></script>
   <script src="js/pubblica.js?v=1794043523"></script>
-  <script src="js/fondale.js?v=1794043523"></script>
+  <script src="js/fondale.js?v=1794143149"></script>
   <script src="js/sostieni.js?v=1794142532"></script>
   <script src="js/admin.js?v=1794142532"></script>
   <script src="js/ascolta.js?v=1794043523"></script>
-  <script src="js/movimento.js?v=1794043523"></script>
+  <script src="js/movimento.js?v=1794143149"></script>
 </body>
 </html>

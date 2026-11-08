@@ -3,6 +3,7 @@
    della fila che stai guardando (horror, Roma, esoterismo, lingue, guide…). */
 (() => {
   'use strict';
+  if (document.documentElement.classList.contains('leggero')) return;   // telefono lento: niente sfondo animato
   const fermo = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const f = document.createElement('div');
   f.id = 'fondale';

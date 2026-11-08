@@ -306,3 +306,9 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .mia-h2 svg { width: 22px; height: 22px; fill: none; stroke: #3ddc97; stroke-width: 2.6; }
 .mia-h2 span { font: 600 13px/1 var(--ui); padding: 5px 9px; border-radius: 99px; background: rgba(255, 255, 255, .08); color: var(--muted, #aaa); }
 .btn.letto-on { color: #3ddc97; }
+
+/* ---- modo leggero (telefoni con poca memoria o browser vecchi): la scheda video non si riempie, la pagina si disegna subito */
+html.leggero *, html.leggero *::before, html.leggero *::after { animation: none !important; transition: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+html.leggero #fondale, html.leggero .aurora, html.leggero .hero-grana, html.leggero .particelle, html.leggero .scorrimento { display: none !important; }
+html.leggero .fila .libro, html.leggero .fila .posto, html.leggero .vetrina .slide .hero-testo > *, html.leggero .vetrina .slide .poster, html.leggero .fila-testa h2 .lt { opacity: 1; transform: none; }
+html.leggero body { background: #0b0b0d; }

@@ -646,15 +646,19 @@
   window.addEventListener('scroll', () => $('#nav').classList.toggle('solida', scrollY > 30), { passive: true });
 
   // ---------------------------------------------------------------- avvio
+  let tentativiServer = 0;
   async function controllaServer() {
     try {
-      const c = new AbortController(); setTimeout(() => c.abort(), 6000);
+      const c = new AbortController(); setTimeout(() => c.abort(), 15000);   // i telefoni lenti ci mettono un po' ad aprire la pagina
       const r = await fetch(S.server + '/stato', { signal: c.signal, cache: 'no-store' });
       S.online = r.ok;
     } catch { S.online = false; }
     const av = $('#avviso');
-    if (S.online === false) { av.textContent = 'La libreria di casa sta dormendo: puoi leggere i libri salvati e quelli di riserva.'; av.hidden = false; }
-    else av.hidden = true;
+    if (S.online === false) {
+      av.textContent = 'La libreria di casa sta dormendo: puoi leggere i libri salvati e quelli di riserva.'; av.hidden = false;
+      // si riprova da soli: prima presto (rete lenta), poi ogni minuto (l'HP si sveglia la mattina)
+      setTimeout(controllaServer, ++tentativiServer < 3 ? 5000 : 60000);
+    } else { av.hidden = true; tentativiServer = 0; }
   }
 
   async function avvio() {

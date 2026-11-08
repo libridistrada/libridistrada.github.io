@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const L = window.LDS;
-  const fermo = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fermo = matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('leggero');
   const mouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
   const $ = (s, el = document) => el.querySelector(s);
   const esc = L.esc;
