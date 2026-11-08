@@ -25,6 +25,9 @@
     aa: '<svg viewBox="0 0 24 24"><path d="M3 19l5-14 5 14M5 14h6M15 19l3.5-9 3.5 9M16 16h5"/></svg>',
     voce: '<svg viewBox="0 0 24 24"><path d="M4 9.5v5h4l5 4v-13l-5 4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
     pausa: '<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>',
+    piu: '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M10.5 7.5v6M7.5 10.5h6"/></svg>',
+    meno: '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M7.5 10.5h6"/></svg>',
+    testi: '<svg viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg>',
   };
 
   function interfaccia(b) {
@@ -72,6 +75,7 @@
   async function apri(b) {
     chiudi(true);
     R.b = b;
+    if (b.fu) return apriFumetto(b);   // fumetto: tavole a immagini, non testo da impaginare
     interfaccia(b);
     let dati;
     try { dati = await L.datiEpub(b); }
@@ -442,6 +446,7 @@
 
   function azione(a) {
     if (a === 'esci') return esci();
+    if (R.fu) return azioneFumetto(a);
     if (!R.rend || !R.pronto) return;   // il libro si sta ancora aprendo
     if (a === 'succ') { document.getElementById('lt-pannello').hidden = true; return R.rend.next(); }
     if (a === 'prec') { document.getElementById('lt-pannello').hidden = true; return R.rend.prev(); }
@@ -455,6 +460,8 @@
     if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); azione('succ'); }
     if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); azione('prec'); }
     if (e.key === 'Escape') esci();
+    if (R.fu && (e.key === '+' || e.key === '=')) azione('piu');
+    if (R.fu && e.key === '-') azione('meno');
   }
   document.addEventListener('keydown', tasti);
 
@@ -466,8 +473,168 @@
   function chiudi(silenzioso) {
     R.voce = false; try { speechSynthesis.cancel(); } catch { /* */ }
     if (R.book) { try { R.book.destroy(); } catch { /* */ } }
+    if (R.fu) { R.fu.voce = false; if (R.fu.obs) R.fu.obs.disconnect(); R.fu.pagine.forEach(p => URL.revokeObjectURL(p.url)); R.fu = null; }
     R.book = R.rend = null; R.b = null; R.locOk = false; R.pronto = false;
     if (!el.hidden) { el.hidden = true; el.innerHTML = ''; document.body.classList.remove('bloccato'); }
+  }
+
+
+  // ---------------------------------------------------------------- fumetti: le tavole una sotto l'altra
+  // Si scorre col dito o con le frecce, si ingrandisce con + e −, i dialoghi si possono mostrare sotto ogni tavola
+  // o far leggere ad alta voce. Il testo di ogni tavola sta anche nel testo alternativo dell'immagine (lettori di schermo).
+  const ZOOM = [1, 1.5, 2, 2.5];
+  async function tavole(dati) {
+    const zip = await JSZip.loadAsync(dati);
+    const leggi = p => { const f = zip.file(p); return f ? f.async('string') : null; };
+    const dir = p => p.replace(/[^/]*$/, '');
+    const unisci = (base, rel) => { const out = []; for (const x of (base + rel).split('/')) { if (x === '..') out.pop(); else if (x && x !== '.') out.push(x); } return out.join('/'); };
+    const opfP = /full-path="([^"]+)"/.exec(await leggi('META-INF/container.xml'))[1];
+    const opf = new DOMParser().parseFromString(await leggi(opfP), 'application/xml');
+    const man = {};
+    opf.querySelectorAll('manifest > item').forEach(i => { man[i.getAttribute('id')] = i.getAttribute('href'); });
+    const out = [];
+    for (const r of opf.querySelectorAll('spine > itemref')) {
+      const href = man[r.getAttribute('idref')];
+      if (!href) continue;
+      const xP = unisci(dir(opfP), decodeURIComponent(href));
+      const x = await leggi(xP);
+      if (!x) continue;
+      const d = new DOMParser().parseFromString(x, 'application/xhtml+xml');
+      const img = d.querySelector('img');
+      if (!img) continue;
+      const iP = unisci(dir(xP), decodeURIComponent(img.getAttribute('src') || ''));
+      const f = zip.file(iP);
+      if (!f) continue;
+      const tipo = /\.webp$/i.test(iP) ? 'image/webp' : /\.png$/i.test(iP) ? 'image/png' : 'image/jpeg';
+      const vp = /width=(\d+),\s*height=(\d+)/.exec((d.querySelector('meta[name="viewport"]') || { getAttribute: () => '' }).getAttribute('content') || '');
+      out.push({ url: URL.createObjectURL(new Blob([await f.async('arraybuffer')], { type: tipo })),
+        w: vp ? +vp[1] : 0, h: vp ? +vp[2] : 0, testo: (img.getAttribute('alt') || '').replace(/^Pagina \d+\.?\s*/, '') });
+    }
+    return out;
+  }
+
+  async function apriFumetto(b) {
+    const F = R.fu = { pagine: [], zoom: Math.min(ZOOM.length - 1, Math.max(0, store.get('zoomFumetti', 0))), testi: !!store.get('testiFumetti', false), voce: false, attuale: 0, obs: null };
+    el.className = 'lettore ui-scuro fumetto' + (F.testi ? ' testi-on' : '');
+    el.style.setProperty('--lt-bg', '#0e0e12'); el.style.setProperty('--lt-fg', '#ece6da');
+    el.innerHTML = `
+      <div class="lt-barra lt-su">
+        <button class="lt-btn" data-a="esci" aria-label="Chiudi il fumetto">${icone.indietro}</button>
+        <div class="lt-titolo"><b>${esc(b.t)}</b><span id="lt-cap">Fumetto</span></div>
+        <a class="lt-btn" href="#/" aria-label="Torna alla home">${icone.casa}</a>
+        <button class="lt-btn" data-a="salva" aria-label="Salva nella mia libreria"></button>
+        <button class="lt-btn" data-a="meno" aria-label="Rimpicciolisci le tavole">${icone.meno}</button>
+        <button class="lt-btn" data-a="piu" aria-label="Ingrandisci le tavole">${icone.piu}</button>
+        <button class="lt-btn${F.testi ? ' on' : ''}" data-a="testi" aria-pressed="${F.testi}" aria-label="Mostra i dialoghi sotto ogni tavola">${icone.testi}</button>
+        <button class="lt-btn" data-a="voce" aria-pressed="false" aria-label="Leggi i dialoghi ad alta voce">${icone.voce}</button>
+      </div>
+      <div class="lt-fumetto" id="lt-fumetto" tabindex="0" role="region" aria-label="Tavole del fumetto">
+        <div class="lt-carica" id="lt-carica"><div class="anello"></div><span>Apro il fumetto…</span></div></div>
+      <div class="lt-barra lt-giu"><span id="lt-perc" aria-live="polite">—</span><span id="lt-resto"></span></div>`;
+    el.hidden = false;
+    document.body.classList.add('bloccato');
+    el.onclick = e => { const a = e.target.closest('[data-a]'); if (a) azione(a.dataset.a); };
+    L.bottoneSalva(el.querySelector('[data-a="salva"]'), b, { icona: L.ico.libreria, testo: false });
+    const errore = t => { const c = document.getElementById('lt-carica'); if (c) c.innerHTML = `<p>${esc(t)}</p><button class="btn contorno" data-a="esci">Torna indietro</button>`; };
+    let dati;
+    try { dati = await L.datiEpub(b); } catch (e) { return errore(e.message); }
+    if (R.fu !== F) return;
+    try { F.pagine = await tavole(dati); } catch { F.pagine = []; }
+    if (R.fu !== F) { F.pagine.forEach(p => URL.revokeObjectURL(p.url)); return; }
+    if (!F.pagine.length) return errore('Non riesco ad aprire questo fumetto');
+    const n = F.pagine.length;
+    const box = document.getElementById('lt-fumetto');
+    box.innerHTML = `<div class="lt-tavole">${F.pagine.map((p, i) => `<figure class="lt-tavola" data-i="${i}">
+        <img src="${p.url}" alt="${esc(`Tavola ${i + 1} di ${n}` + (p.testo ? ': ' + p.testo : ''))}"${p.w ? ` width="${p.w}" height="${p.h}"` : ''} loading="${i < 2 ? 'eager' : 'lazy'}" decoding="async">
+        ${p.testo ? `<figcaption class="lt-dialoghi" aria-hidden="true">${p.testo.split(' · ').map(esc).join('<br>')}</figcaption>` : ''}</figure>`).join('')}
+      <p class="lt-crediti">${esc(b.l || '')} <a href="${esc(b.f || '#')}" target="_blank" rel="noopener">Vedi la fonte</a>.</p></div>`;
+    zoomFumetto(0);
+    // la tavola più visibile è quella «attuale»: serve per la posizione, la percentuale e la voce
+    const vis = new Map();
+    F.obs = new IntersectionObserver(voci => {
+      voci.forEach(v => vis.set(+v.target.dataset.i, v.intersectionRatio));
+      let best = F.attuale, max = -1;
+      vis.forEach((r, i) => { if (r > max) { max = r; best = i; } });
+      if (best !== F.attuale || !F.vista) { F.attuale = best; F.vista = true; posizioneFumetto(); }
+    }, { root: box, threshold: [0, .25, .5, .75, 1] });
+    box.querySelectorAll('.lt-tavola').forEach(f => F.obs.observe(f));
+    box.addEventListener('dblclick', e => { if (e.target.closest('.lt-tavola img')) zoomFumetto(F.zoom ? -F.zoom : 2); });
+    const pos = store.get('pos', {})[b.id];
+    if (pos && pos.pg > 0 && pos.pg < n) vaiTavola(pos.pg, false);
+    box.focus({ preventScroll: true });
+    R.pronto = true;
+  }
+  function posizioneFumetto() {
+    const F = R.fu, b = R.b;
+    if (!F || !b) return;
+    const n = F.pagine.length, i = F.attuale, finito = i >= n - 1;
+    const tutte = store.get('pos', {}), prima = tutte[b.id] || {};
+    tutte[b.id] = { pg: i, p: finito ? 1 : (i + 1) / n, t: Date.now(), ...(finito || prima.fine ? { fine: prima.fine || Date.now() } : {}) };
+    store.set('pos', tutte);
+    if (finito && !prima.fine) toast('Hai finito il fumetto! Lo trovi tra i «Letti» nella tua libreria');
+    const perc = document.getElementById('lt-perc'), resto = document.getElementById('lt-resto');
+    if (perc) perc.textContent = `Tavola ${i + 1} di ${n}`;
+    if (resto) resto.textContent = finito ? 'Fumetto finito ✓' : `${Math.round((i + 1) / n * 100)}%`;
+  }
+  function vaiTavola(i, liscio = true) {
+    const F = R.fu;
+    if (!F) return;
+    i = Math.max(0, Math.min(F.pagine.length - 1, i));
+    const f = el.querySelector(`.lt-tavola[data-i="${i}"]`);
+    if (f) f.scrollIntoView({ behavior: liscio && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto', block: 'start' });
+  }
+  function zoomFumetto(d) {
+    const F = R.fu;
+    if (!F) return;
+    F.zoom = Math.max(0, Math.min(ZOOM.length - 1, F.zoom + d));
+    store.set('zoomFumetti', F.zoom);
+    const t = el.querySelector('.lt-tavole');
+    if (t) t.style.setProperty('--z', ZOOM[F.zoom]);
+    const m = el.querySelector('[data-a="meno"]'), p = el.querySelector('[data-a="piu"]');
+    if (m) m.disabled = F.zoom === 0;
+    if (p) p.disabled = F.zoom === ZOOM.length - 1;
+    if (d) { vaiTavola(F.attuale, false); toast(F.zoom ? `Tavole ingrandite ${ZOOM[F.zoom]}×` : 'Tavole a misura di schermo'); }
+  }
+  function testiFumetto() {
+    const F = R.fu;
+    F.testi = !F.testi;
+    store.set('testiFumetti', F.testi);
+    el.classList.toggle('testi-on', F.testi);
+    const b = el.querySelector('[data-a="testi"]');
+    b.classList.toggle('on', F.testi); b.setAttribute('aria-pressed', F.testi);
+    vaiTavola(F.attuale, false);
+  }
+  function voceFumetto() {
+    const F = R.fu;
+    if (!('speechSynthesis' in window)) return toast('Questo browser non sa leggere ad alta voce');
+    F.voce = !F.voce;
+    const b = el.querySelector('[data-a="voce"]');
+    b.classList.toggle('on', F.voce); b.setAttribute('aria-pressed', F.voce);
+    try { speechSynthesis.cancel(); } catch { /* */ }
+    if (F.voce) leggiTavola(F.attuale);
+  }
+  function leggiTavola(i) {
+    const F = R.fu;
+    if (!F || !F.voce) return;
+    if (i >= F.pagine.length) { F.voce = false; const b = el.querySelector('[data-a="voce"]'); if (b) { b.classList.remove('on'); b.setAttribute('aria-pressed', false); } return; }
+    vaiTavola(i);
+    const t = F.pagine[i].testo;
+    if (!t) return setTimeout(() => leggiTavola(i + 1), 1500);
+    const u = new SpeechSynthesisUtterance(t.split(' · ').join('. '));
+    u.lang = 'it-IT';
+    const v = voceScelta(); if (v) u.voice = v;
+    u.onend = () => { if (R.fu === F && F.voce) setTimeout(() => leggiTavola(i + 1), 700); };
+    speechSynthesis.speak(u);
+  }
+  function azioneFumetto(a) {
+    if (!R.pronto) return;
+    const F = R.fu;
+    if (a === 'succ') return vaiTavola(F.attuale + 1);
+    if (a === 'prec') return vaiTavola(F.attuale - 1);
+    if (a === 'piu') return zoomFumetto(1);
+    if (a === 'meno') return zoomFumetto(-1);
+    if (a === 'testi') return testiFumetto();
+    if (a === 'voce') return voceFumetto();
   }
 
   window.LDSLettore = { apri, chiudi };

@@ -219,7 +219,7 @@
   }
 
   // ---------------------------------------------------------------- dati
-  const ordina = (a, b) => (b.k - a.k) || ((b.v || 0) - (a.v || 0));
+  const ordina = (a, b) => (b.k - a.k) || ((b.v || 0) - (a.v || 0)) || ((a.ep && b.ep) ? a.ep - b.ep : 0);   // episodi di una serie in ordine
   const inRaccolta = n => S.libri.filter(b => (b.s || []).includes(n)).sort(ordina);
   const inCategoria = n => n === 'I best seller di sempre'
     ? [...S.libri].filter(b => b.v).sort((a, b) => b.v - a.v).slice(0, 40)
@@ -435,8 +435,8 @@
       <button class="chiudi" aria-label="Chiudi">${ico.x}</button>
       <div class="scheda-testa"><div class="sfondo" style="${sfondo}"></div>${copertina(b)}
         <div><h1>${esc(b.t)}</h1>
-          <p class="chi">di <b>${esc(autori(b))}</b>${vita(b)}${b.y ? ` · ${b.y}` : ''}${durata(b) ? ` · <span class="durata-testo">${durata(b)} di lettura</span>` : ''}</p>
-          <div class="etichette">${rac}<span class="etichetta">${esc(b.c)}</span>${(b.sf || []).map(n => `<a class="etichetta c" style="--c:${(CATEGORIE[n] || [, , '#777'])[2]}" href="#/categoria/${encodeURIComponent(n)}">${esc(n)}</a>`).join('')}${b.sc ? '<span class="etichetta">Edizione originale scansionata</span>' : ''}${b.nostra ? '<span class="etichetta">Edizione Libri di strada</span>' : ''}</div>
+          <p class="chi">di <b>${esc(autori(b))}</b>${vita(b)}${b.y ? ` · ${b.y}` : ''}${durata(b) ? ` · <span class="durata-testo">${durata(b)} di lettura</span>` : ''}${b.fu ? ` · fumetto, ${b.pg} tavole` : ''}</p>
+          <div class="etichette">${rac}${(b.sf || []).includes(b.c) ? '' : `<span class="etichetta">${esc(b.c)}</span>`}${(b.sf || []).map(n => `<a class="etichetta c" style="--c:${(CATEGORIE[n] || [, , '#777'])[2]}" href="#/categoria/${encodeURIComponent(n)}">${esc(n)}</a>`).join('')}${b.sc ? '<span class="etichetta">Edizione originale scansionata</span>' : ''}${b.nostra ? '<span class="etichetta">Edizione Libri di strada</span>' : ''}</div>
           <div class="bottoni">
             ${b.e ? `<a class="btn primario" href="#/leggi/${encodeURIComponent(b.id)}">${ico.play} ${letto(b.id) ? 'Rileggi' : pr > .01 ? `Riprendi (${Math.round(pr * 100)}%)` : 'Leggi ora'}</a>` : ''}
             ${b.e ? `<button class="btn secondario" data-salva>${salvato ? ico.ok + ' Salvato' : ico.salva + ' Salva'}</button>` : ''}
