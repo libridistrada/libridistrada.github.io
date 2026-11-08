@@ -450,6 +450,8 @@
   async function scheda(id) {
     const b = S.per.get(id);
     if (!b) return;
+    store.set('visti', [id, ...store.get('visti', []).filter(x => x !== id)].slice(0, 60));
+    salvaProfilo();
     const el = $('#scheda');
     const salvato = !!(await db.get(id));
     const altriAutore = S.libri.filter(x => x.id !== b.id && autori(x) === autori(b)).sort(ordina);
@@ -534,7 +536,24 @@
     }
     throw new Error(S.online === false ? 'La libreria di casa sta dormendo: questo libro non è nella riserva, riprova più tardi' : 'Non riesco a scaricare il libro, riprova');
   }
-  async function salvaSulTelefono(b) { await db.put(b.id, await datiEpub(b)); }
+  async function salvaSulTelefono(b) { await db.put(b.id, await datiEpub(b)); salvaProfilo(); }
+  // profilo dei gusti (libri letti, salvati, aperti): resta su questo telefono, nella cache del browser.
+  // Lo legge solo il service worker per scegliere la proposta dell'avviso settimanale: al server non arriva niente.
+  let profiloT;
+  function salvaProfilo() {
+    clearTimeout(profiloT);
+    profiloT = setTimeout(async () => {
+      try {
+        const pos = store.get('pos', {});
+        const letti = Object.entries(pos).sort((a, b) => (b[1].t || 0) - (a[1].t || 0)).map(([id]) => id).slice(0, 60);
+        const salvati = (await db.keys()).slice(0, 60);
+        const visti = store.get('visti', []).slice(0, 60);
+        const c = await caches.open('lds-profilo');
+        await c.put(new URL('profilo-locale.json', location.href).href,
+          new Response(JSON.stringify({ letti, salvati, visti, t: Date.now() }), { headers: { 'Content-Type': 'application/json' } }));
+      } catch { /* browser senza cache: niente proposte su misura, restano le novità */ }
+    }, 1500);
+  }
   // pulsante «Salva» uguale ovunque: scheda, anteprima, lettore. Tocca di nuovo per togliere il libro.
   async function bottoneSalva(btn, b, { icona = ico.salva, testo = true } = {}) {
     const scrivi = (svg, t) => (btn.innerHTML = svg + (testo ? ' ' + t : ''));
@@ -607,7 +626,7 @@
     privacy: ['Privacy', `<p><strong>In breve: non sappiamo chi sei e non vogliamo saperlo.</strong></p>
       <h2>Niente account, niente cookie, niente pubblicità</h2><p>Il sito non usa cookie, non ha pubblicità e non usa servizi di statistiche di terzi. I caratteri e il lettore sono dentro il sito: aprendolo non contatti Google o altri.</p>
       <h2>Cosa resta sul tuo telefono</h2><p>Il punto a cui sei arrivato, i segnalibri, le impostazioni di lettura e i libri che salvi restano <strong>solo sul tuo telefono</strong> (memoria del browser). Puoi cancellarli in ogni momento dalle impostazioni del browser.</p>
-      <h2>Avvisi dei libri nuovi</h2><p>Sono facoltativi: arrivano solo se premi «Avvisami» e lo consenti al tuo browser, al massimo uno a settimana. Per consegnarli la libreria di casa conserva solo l'indirizzo di consegna anonimo creato dal browser, senza nome, email o indirizzo IP, e lo cancella quando li disattivi. L'avviso viaggia cifrato attraverso il servizio di notifiche del tuo browser (Google per Chrome, Apple per Safari, Mozilla per Firefox), che non può leggerne il testo.</p>
+      <h2>Avvisi dei libri nuovi</h2><p>Sono facoltativi: arrivano solo se premi «Avvisami» e lo consenti al tuo browser, uno a settimana. La proposta su misura che contengono la sceglie il tuo telefono, in base ai libri che hai aperto, letto o salvato: questa cronologia resta sul telefono e non viene mai inviata a noi. Per consegnarli la libreria di casa conserva solo l'indirizzo di consegna anonimo creato dal browser, senza nome, email o indirizzo IP, e lo cancella quando li disattivi. L'avviso viaggia cifrato attraverso il servizio di notifiche del tuo browser (Google per Chrome, Apple per Safari, Mozilla per Firefox), che non può leggerne il testo.</p>
       <h2>Cosa contiamo</h2><p>Per sapere se il progetto funziona contiamo, in forma anonima, quante volte il sito viene aperto, quante volte dal QR, quante volte un libro viene letto o scaricato e quante volte viene premuto «Offrimi un caffè». Non salviamo indirizzi IP né altri dati che possano identificarti: l'indirizzo serve solo, per qualche minuto e solo in memoria, a non contare due volte la stessa apertura.</p>
       <h2>Audiolibri</h2><p>Gli audiolibri con voce umana vengono da <a href="https://librivox.org" target="_blank" rel="noopener">LibriVox</a> e sono ospitati dall'Internet Archive: il tuo telefono li contatta solo quando premi «Ascolta». La voce narrante del lettore invece è quella del tuo dispositivo e funziona senza mandare il testo a nessuno.</p>
       <h2>Chi ospita</h2><p>Le pagine sono ospitate da GitHub Pages; i libri da un server privato collegato tramite Tailscale. Questi servizi, come ogni server web, ricevono l'indirizzo IP necessario a rispondere.</p>`],
@@ -654,6 +673,7 @@
       if (!b) return (location.hash = '#/');
       if (!app.innerHTML) home();
       conta('lettura', b.id);
+      salvaProfilo();
       return window.LDSLettore.apri(b);
     }
     S.base = location.hash || '#/';   // ultima pagina «normale»: la X della scheda torna qui

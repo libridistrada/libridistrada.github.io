@@ -233,10 +233,11 @@
     corpo.innerHTML = `<div class="admin-numeri"><div class="admin-numero" style="--c:#ffbe0b"><b>${s.iscritti}</b><span>Iscritti agli avvisi</span></div>
         <div class="admin-numero" style="--c:#3affc3"><b>${a ? a.n : 0}</b><span>Libri nuovi da annunciare</span></div></div>
       <form class="modulo" id="fa" style="margin-top:18px"><label class="spunta interruttore"><input type="checkbox" name="attivo" ${s.attivo ? 'checked' : ''}><span><b>Invio automatico</b>
-        <small>Il sabato mattina, una volta a settimana, solo se ci sono libri nuovi. Il prossimo: ${esc(data(s.prossimo))}.</small></span></label></form>
+        <small>Il sabato mattina, una volta a settimana. Ognuno riceve una proposta su misura scelta dal suo telefono (in base a ciò che ha letto, salvato e aperto: il server non lo sa), più le novità. Il prossimo: ${esc(data(s.prossimo))}.</small></span></label></form>
       <h3 class="admin-sotto">Prossimo avviso</h3>
       ${a ? `<div class="avviso-anteprima"><img src="img/icona-192.png" alt=""><div><b>${esc(a.titolo)}</b><span>${esc(a.testo)}</span></div></div>`
-        : '<p class="muted">Per ora non ci sono libri nuovi da annunciare: sabato non partirà niente.</p>'}
+        : ''}
+      <p class="muted admin-nota">Questo è il testo per chi non ha ancora letto niente: chi ha già letto o salvato qualcosa vede al suo posto «Per te, questa settimana» con un libro scelto per lui.</p>
       <div class="bottoni" style="margin-top:14px"><button class="btn secondario" id="invia-ora" ${a && s.iscritti ? '' : 'disabled'}>Invia adesso</button></div>
       <p class="muted admin-nota" id="esito-a"></p>
       <h3 class="admin-sotto">Ultimo invio</h3>
