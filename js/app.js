@@ -627,7 +627,7 @@
       <h2>Niente account, niente cookie, niente pubblicità</h2><p>Il sito non usa cookie, non ha pubblicità e non usa servizi di statistiche di terzi. I caratteri e il lettore sono dentro il sito: aprendolo non contatti Google o altri.</p>
       <h2>Cosa resta sul tuo telefono</h2><p>Il punto a cui sei arrivato, i segnalibri, le impostazioni di lettura e i libri che salvi restano <strong>solo sul tuo telefono</strong> (memoria del browser). Puoi cancellarli in ogni momento dalle impostazioni del browser.</p>
       <h2>Avvisi dei libri nuovi</h2><p>Sono facoltativi: arrivano solo se premi «Avvisami» e lo consenti al tuo browser, uno a settimana. La proposta su misura che contengono la sceglie il tuo telefono, in base ai libri che hai aperto, letto o salvato: questa cronologia resta sul telefono e non viene mai inviata a noi. Per consegnarli la libreria di casa conserva solo l'indirizzo di consegna anonimo creato dal browser, senza nome, email o indirizzo IP, e lo cancella quando li disattivi. L'avviso viaggia cifrato attraverso il servizio di notifiche del tuo browser (Google per Chrome, Apple per Safari, Mozilla per Firefox), che non può leggerne il testo.</p>
-      <h2>Cosa contiamo</h2><p>Per sapere se il progetto funziona contiamo, in forma anonima, quante volte il sito viene aperto, quante volte dal QR, quante volte un libro viene letto o scaricato e quante volte viene premuto «Offrimi un caffè». Non salviamo indirizzi IP né altri dati che possano identificarti: l'indirizzo serve solo, per qualche minuto e solo in memoria, a non contare due volte la stessa apertura.</p>
+      <h2>Cosa contiamo</h2><p>Per sapere quante persone diverse usano il sito, il tuo telefono ricorda solo la data dell'ultima visita (nessun codice che ti identifichi) e ci manda «una persona in più oggi» la prima volta del giorno e del mese. Per sapere se il progetto funziona contiamo anche, in forma anonima, quante volte il sito viene aperto, quante volte dal QR, quante volte un libro viene letto o scaricato e quante volte viene premuto «Offrimi un caffè». Non salviamo indirizzi IP né altri dati che possano identificarti: l'indirizzo serve solo, per qualche minuto e solo in memoria, a non contare due volte la stessa apertura.</p>
       <h2>Audiolibri</h2><p>Gli audiolibri con voce umana vengono da <a href="https://librivox.org" target="_blank" rel="noopener">LibriVox</a> e sono ospitati dall'Internet Archive: il tuo telefono li contatta solo quando premi «Ascolta». La voce narrante del lettore invece è quella del tuo dispositivo e funziona senza mandare il testo a nessuno.</p>
       <h2>Chi ospita</h2><p>Le pagine sono ospitate da GitHub Pages; i libri da un server privato collegato tramite Tailscale. Questi servizi, come ogni server web, ricevono l'indirizzo IP necessario a rispondere.</p>`],
   };
@@ -729,6 +729,14 @@
     S.libri.forEach(b => S.per.set(b.id, b));
     const qs = new URLSearchParams(location.search);
     if (qs.has('qr')) { conta('qr'); history.replaceState(null, '', location.pathname + location.hash); } else conta('visita');
+    // persone reali, senza codici: il telefono ricorda solo giorno e mese dell'ultima visita e lo dice una volta sola
+    try {
+      const oggi = new Date().toISOString().slice(0, 10), mese = oggi.slice(0, 7), u = store.get('ultima', {});
+      if (!u.mai) conta('persona-nuova');
+      if (u.mese !== mese) conta('persona-mese');
+      if (u.giorno !== oggi) conta('persona-giorno');
+      store.set('ultima', { mai: 1, mese, giorno: oggi });
+    } catch { /* senza memoria locale: si conta solo la visita */ }
     controllaServer();
     // libri approvati dall'admin dopo l'ultima pubblicazione del sito (Autori emergenti)
     fetch(S.server + '/novita.json', { cache: 'no-store' }).then(r => r.json()).then(n => {

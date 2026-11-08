@@ -307,8 +307,10 @@
     const max = Math.max(1, ...giorni.map(([, g]) => g.visita + g.qr));
     const t = s.totali;
     corpo.innerHTML = `<div class="admin-numeri">
-        ${[['QR inquadrati', t.qr, '#ffbe0b'], ['Visite', t.visita + t.qr, '#3affc3'], ['Letture', t.lettura, '#ff3d7f'], ['Download', t.download, '#7aa2ff'], ['Libri in catalogo', s.catalogo, '#fff']]
+        ${[['Persone oggi', (s.persone || {}).oggi || 0, '#ff8a4c'], ['Persone questo mese', (s.persone || {}).mese || 0, '#ff5d8f'], ['Persone da sempre', (s.persone || {}).totali || 0, '#c6ff00'],
+           ['QR inquadrati', t.qr, '#ffbe0b'], ['Visite (aperture)', t.visita + t.qr, '#3affc3'], ['Letture', t.lettura, '#ff3d7f'], ['Download', t.download, '#7aa2ff'], ['Libri in catalogo', s.catalogo, '#fff']]
           .map(([n, v, c]) => `<div class="admin-numero" style="--c:${c}"><b data-n="${v}">0</b><span>${n}</span></div>`).join('')}</div>
+      <p class="muted admin-nota" style="margin-top:10px">«Persone» sono telefoni o computer diversi, contati senza codici né cookie (si conta dal ${esc(((s.persone || {}).dal || '').split('-').reverse().join('/'))}). «Visite» sono le aperture del sito: una persona può aprirlo più volte.</p>
       <h2 class="reparto">Offrimi un caffè</h2>
       <div class="admin-numeri">${caffe(s)}</div>
       ${importiScelti(s)}
