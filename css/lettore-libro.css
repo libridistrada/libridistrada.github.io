@@ -4,7 +4,7 @@
 @font-face { font-family: OpenDyslexic; src: url(../font/opendyslexic-latin-400-normal.woff2) format("woff2"); font-weight: 400; }
 @font-face { font-family: OpenDyslexic; src: url(../font/opendyslexic-latin-700-normal.woff2) format("woff2"); font-weight: 700; }
 @font-face { font-family: Inter; src: url(../font/inter-latin-wght-normal.woff2) format("woff2"); font-weight: 100 900; }
-body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; hyphens: auto; -webkit-hyphens: auto; }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; }
 p { text-align: justify; } img { max-width: 100%; height: auto; }
 a { color: inherit; }
 /* resti dell'interfaccia di Wikisource negli ePub esportati */

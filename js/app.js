@@ -457,7 +457,7 @@
           ${b.cov ? `<figure class="epoca"><img src="copertine/${esc(b.cov === 1 ? b.id : b.cov)}.webp" alt="" loading="lazy"><figcaption>${b.cov === 1 ? 'Dall\'edizione originale' : esc(b.a[0])}</figcaption></figure>` : ''}
           <dl style="margin-top:18px">${b.y ? `<dt>Anno</dt><dd>${b.y}</dd>` : ''}<dt>Genere</dt><dd>${esc(b.c)}</dd>
             ${b.m ? `<dt>Autore</dt><dd>morto nel ${b.m}</dd>` : ''}<dt>Fonte</dt><dd>${esc(b.fn || 'Wikisource')}</dd></dl>
-          <p class="licenza">${esc(b.l || '')} <a href="${esc(b.f)}" target="_blank" rel="noopener">Vedi la fonte</a>.</p>
+          <p class="licenza">${esc(b.l || '')}${b.f ? ` <a href="${esc(b.f)}" target="_blank" rel="noopener">Vedi la fonte</a>.` : ''}</p>
         </div></div>
       ${fila('Dello stesso autore', altriAutore, { max: 20 })}
       ${fila(b.s && b.s[0] ? 'Altro da ' + b.s[0] : 'Altri ' + b.c.toLowerCase(), stessa, { max: 20 })}

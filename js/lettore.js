@@ -547,7 +547,7 @@
     box.innerHTML = `<div class="lt-tavole">${F.pagine.map((p, i) => `<figure class="lt-tavola" data-i="${i}">
         <img src="${p.url}" alt="${esc(`Tavola ${i + 1} di ${n}` + (p.testo ? ': ' + p.testo : ''))}"${p.w ? ` width="${p.w}" height="${p.h}"` : ''} loading="${i < 2 ? 'eager' : 'lazy'}" decoding="async">
         ${p.testo ? `<figcaption class="lt-dialoghi" aria-hidden="true">${p.testo.split(' · ').map(esc).join('<br>')}</figcaption>` : ''}</figure>`).join('')}
-      <p class="lt-crediti">${esc(b.l || '')} <a href="${esc(b.f || '#')}" target="_blank" rel="noopener">Vedi la fonte</a>.</p></div>`;
+      <p class="lt-crediti">${esc(b.l || '')}${b.f ? ` <a href="${esc(b.f)}" target="_blank" rel="noopener">Vedi la fonte</a>.` : ''}</p></div>`;
     zoomFumetto(0);
     // la tavola più visibile è quella «attuale»: serve per la posizione, la percentuale e la voce
     const vis = new Map();
