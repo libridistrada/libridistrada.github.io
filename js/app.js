@@ -242,7 +242,16 @@
     const pesca = arr => arr.length ? arr[(hash(String(giorno)) + arr.length) % arr.length] : null;
     const bello = b => b.tr || b.inc;
     const scelti = [];
+    // prima il moderno: un fumetto, un romanzo di oggi, sport, viaggio, attualità (cambiano ogni giorno)
+    const moderni = [S.libri.filter(b => b.fu && b.ep <= 12), S.libri.filter(b => b.mod && b.c === 'Romanzi'),
+      S.libri.filter(b => (b.sf || []).includes('Calcio e sport')), inRaccolta('Guide di viaggio'),
+      inRaccolta('Guide di oggi').filter(b => !(b.sf || []).includes('Calcio e sport'))];
+    for (const gruppo of moderni) {
+      const x = pesca(gruppo.filter(bello));
+      if (x && !scelti.includes(x)) scelti.push(x);
+    }
     for (const n of Object.keys(RACCOLTE)) {
+      if (scelti.length >= 5) break;
       const x = pesca(inRaccolta(n).filter(bello).slice(0, 12));
       if (x && !scelti.includes(x)) scelti.push(x);
     }
@@ -312,6 +321,19 @@
     html += fila('I 10 più letti', piuLetti, { colore: 'var(--gold)', top: true, max: 10 });   // sempre la prima fila
     html += fila('Continua a leggere', inLettura, { progresso: true, colore: 'var(--gold)' });
     if (nuovi.length) html += fila('Appena arrivati', nuovi, { colore: 'var(--gold)' }) + '<div class="avvisi-posto" data-avvisi></div>';
+    // il moderno in alto: fumetti, sport, attualità, romanzi di oggi, viaggi (deciso con l'utente: svecchiare la Home)
+    const gia = new Set();
+    const filaModerna = (titolo, libri, opt) => { html += fila(titolo, libri, opt); if (opt.chiave) gia.add(opt.chiave); };
+    filaModerna('Fumetti a colori', S.libri.filter(b => b.fu).sort((a, b) => a.ep - b.ep),
+      { colore: '#ffe600', sotto: 'Pepper&Carrot: magia, pozioni e un gatto, tavola dopo tavola', link: '#/categoria/' + encodeURIComponent('Fumetti e manga'), chiave: 'Fumetti e manga' });
+    filaModerna('Calcio e sport', inCategoria('Calcio e sport'),
+      { colore: '#c6ff00', sotto: 'Le storie delle squadre, i campioni, i Mondiali, la Formula 1', link: '#/categoria/' + encodeURIComponent('Calcio e sport'), chiave: 'Calcio e sport' });
+    filaModerna('Capire il mondo di oggi', inRaccolta('Guide di oggi').filter(b => !(b.sf || []).some(x => ['Calcio e sport', 'Sport e benessere'].includes(x))),
+      { colore: '#3affc3', sotto: 'Intelligenza artificiale, geopolitica, fisica, soldi, clima, truffe online', link: '#/raccolta/' + encodeURIComponent('Guide di oggi'), chiave: 'Guide di oggi' });
+    filaModerna('Romanzi di oggi', S.libri.filter(b => b.mod && ['Romanzi', 'Racconti e novelle'].includes(b.c)).sort(ordina),
+      { colore: '#ff8a4c', sotto: 'Scrittori contemporanei, con licenza libera' });
+    filaModerna('Guide di viaggio', inRaccolta('Guide di viaggio'),
+      { colore: '#5ef2d6', sotto: 'Le città del mondo da scoprire, anche senza rete', link: '#/raccolta/' + encodeURIComponent('Guide di viaggio'), chiave: 'Guide di viaggio' });
     // scaffali con un aggancio di oggi: film e serie, brividi brevi, letture da una sera
     const minuti = b => minutiLettura(b) || 9999;
     const FILM = /jekyll|sherlock|isola del tesoro|pinocchio|giro del mondo|corsaro nero|tigri di momp|promessi sposi|casa usher|cuore rivelatore|gatto nero|montecristo|dalla terra alla luna|isola misteriosa|ventimila leghe|cantico di natale|moschettieri|don chisciotte|frankenstein|dracula|amleto|romeo e giulietta|otello|macbeth|decameron|divina commedia|fu mattia pascal|piccolo lord|zanna bianca|robinson|gulliver|alice|le avventure di tom|^cuore$/i;
@@ -325,11 +347,12 @@
     html += fila('Mondi fantastici', mondi, { colore: '#8338ec', sotto: 'Viaggi sulla Luna, fate, mostri e invenzioni impossibili' });
     const raccolte = Object.entries(RACCOLTE);
     raccolte.forEach(([n, r], i) => {
+      if (gia.has(n)) return;
       html += fila(n, inRaccolta(n), { sotto: r.d, colore: r.c[2], link: '#/raccolta/' + encodeURIComponent(n) });
     });
     for (const [, scaffali] of REPARTI) {
       for (const n of scaffali) {
-        if (RACCOLTE[n]) continue;
+        if (RACCOLTE[n] || gia.has(n)) continue;
         html += fila(n, inCategoria(n), { colore: CATEGORIE[n][2], link: '#/categoria/' + encodeURIComponent(n) });
       }
     }

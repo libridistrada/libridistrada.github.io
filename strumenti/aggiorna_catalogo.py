@@ -129,6 +129,7 @@ def main():
         if b.get("scansione"): v["sc"] = 1
         if b.get("edizione_nostra"): v["nostra"] = 1
         if b.get("fumetto"): v["fu"], v["pg"], v["ep"] = 1, b.get("pagine"), b.get("episodio")
+        if b.get("moderno") or b.get("fumetto") or b.get("edizione_nostra"): v["mod"] = 1   # in evidenza nella Home
         if nuovo: v["nuovo"] = 1
         out.append({k: x for k, x in v.items() if x not in (None, "", [], 0) or k in ("id", "t", "a", "c")})
     # audiolibri con voce umana: LibriVox in italiano (pubblico dominio), abbinati per titolo e autore
