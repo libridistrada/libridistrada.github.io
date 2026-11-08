@@ -325,3 +325,8 @@ html.leggero body { background: #0b0b0d; }
 .avvisi.on .avvisi-ico { background: rgba(61, 220, 151, .14); color: #3ddc97; }
 .avvisi .btn { flex: none; }
 @media (max-width: 420px) { .avvisi { flex-wrap: wrap; } .avvisi p { flex-basis: calc(100% - 56px); } .avvisi .btn { margin-left: 56px; } }
+/* modo leggero: senza sfocatura le barre e i riquadri sopra la pagina diventano pieni, così sotto non si legge niente */
+html.leggero .nav.solida, html.leggero .links, html.leggero .cerca { background: #0b0b0d; }
+html.leggero .scheda { background: rgba(0, 0, 0, .9); }
+html.leggero .avviso { background: #2a2416; }
+html.leggero .piede { background-color: #0b0b0d; }
