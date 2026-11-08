@@ -11,7 +11,7 @@
   const DOVE = { stripe: 'Stripe', paypal: 'PayPal', bmc: 'Buy Me a Coffee', kofi: 'Ko-fi' };
   let cfg = null;
   // conteggio anonimo (come visite e letture); i clic dell'amministratore collegato e le anteprime non contano
-  const conta = e => { try { if (sessionStorage.getItem('lds:admin')) return; } catch { /* */ } L.conta(e); };
+  const conta = (e, id) => { try { if (sessionStorage.getItem('lds:admin')) return; } catch { /* */ } L.conta(e, id); };
 
   // server vecchio (un solo link) o nuovo (importi e metodi): qui diventano la stessa cosa
   const metodi = c => (c && c.metodi && c.metodi.length ? c.metodi
@@ -103,7 +103,7 @@
       const b = e.target.closest('.caffe-cifre button');
       if (b) { scelta = b.dataset.v; disegna(); return; }
       const vai = e.target.closest('.caffe-vai');
-      if (vai) { if (!anteprima) conta(vai.dataset.tipo); setTimeout(chiudi, 300); }
+      if (vai) { if (!anteprima) { conta(vai.dataset.tipo); conta('importo', scelta); } setTimeout(chiudi, 300); }
     };
     el.addEventListener('keydown', e => {
       if (e.key === 'Escape') return chiudi();
@@ -124,12 +124,17 @@
 
   new MutationObserver(inScheda).observe(document.getElementById('scheda'), { childList: true });
 
+  let tentativi = 0;
   async function carica() {
     if (!L.S.server) return setTimeout(carica, 300);
     try {
       const r = await fetch(L.S.server + '/config', { cache: 'no-store' });
       cfg = (await r.json()).sostieni;
-    } catch { cfg = null; }
+      tentativi = 0;
+    } catch {   // rete lenta o server che si sta svegliando: si riprova da soli, poco dopo
+      cfg = null;
+      if (++tentativi <= 4) setTimeout(carica, 4000 * tentativi);
+    }
     inAlto(); inFondo(); inScheda();
   }
   window.LDSSostieni = { ricarica: carica, prova: c => popup(true, c), cfg: () => cfg };

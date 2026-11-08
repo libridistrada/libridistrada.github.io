@@ -149,3 +149,15 @@
 .admin-nota { margin: -8px 0 0; font-size: 12.5px; overflow-wrap: anywhere; }
 .admin-aiuto { font-size: 13px; color: var(--fg2); } .admin-aiuto summary { cursor: pointer; color: var(--accent); }
 .admin-aiuto ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; line-height: 1.5; }
+
+/* statistiche: cifre scelte per «Offrimi un caffè» */
+.admin-sotto { margin: 20px 0 10px; font: 600 12px/1 var(--ui); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.admin-importi { display: grid; gap: 8px; }
+.admin-importi > div { display: grid; grid-template-columns: 112px minmax(0, 1fr) 44px; align-items: center; gap: 10px; font-size: 14px; }
+.admin-importi i { display: block; height: 12px; border-radius: 6px; background: linear-gradient(90deg, #ffbe0b, #ff8a00); width: var(--w); min-width: 4px; }
+.admin-importi b { text-align: right; font-variant-numeric: tabular-nums; }
+.admin-mesi { margin-top: 14px; }
+.admin-mesi > div { grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto; }
+.admin-mesi em { min-width: 0; overflow-wrap: anywhere; } .admin-mesi small { align-self: center; }
+@media (max-width: 520px) { .admin-mesi > div { grid-template-columns: minmax(0, 1fr); gap: 2px; } .admin-mesi em, .admin-mesi small { grid-column: 1; grid-row: auto; } .admin-importi > div { grid-template-columns: 96px minmax(0, 1fr) 36px; } }
+.admin-mesi + .admin-nota { margin-top: 10px; }

@@ -208,6 +208,23 @@
       .map(([k, n, c, q]) => `<div class="admin-numero" style="--c:${c}"><b data-n="${t[k] || 0}">0</b><span>${n}</span><small>${ultimi(k)} negli ultimi 30 giorni${q}</small></div>`).join('');
   }
 
+  // cifre scelte da chi passa al pagamento: totale per cifra e storico mese per mese, con una stima del valore
+  function importiScelti(s) {
+    const tot = s.importi || {}, mesi = s.importi_mesi || {};
+    const chiavi = Object.keys(tot).sort((a, b) => (a === 'libera') - (b === 'libera') || a - b);
+    if (!chiavi.length) return '<p class="muted admin-nota" style="margin-top:12px">Le cifre scelte compariranno qui dal prossimo passaggio a PayPal.</p>';
+    const nome = k => k === 'libera' ? 'Offerta libera' : k + ' €';
+    const stima = o => Object.entries(o).reduce((t, [k, n]) => t + (k === 'libera' ? 0 : +k * n), 0);
+    const max = Math.max(...Object.values(tot));
+    const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+    return `<h3 class="admin-sotto">Cifre scelte</h3>
+      <div class="admin-importi">${chiavi.map(k => `<div><span>${nome(k)}</span><i style="--w:${(tot[k] / max * 100).toFixed(1)}%"></i><b>${tot[k]}</b></div>`).join('')}</div>
+      <div class="admin-tabella admin-mesi">${Object.entries(mesi).map(([m, o]) => `<div><b>${MESI[+m.slice(5) - 1]} ${m.slice(0, 4)}</b>
+        <em>${Object.keys(o).sort((a, b) => (a === 'libera') - (b === 'libera') || a - b).map(k => `${nome(k)} ×${o[k]}`).join(' · ')}</em>
+        <small>circa ${stima(o).toLocaleString('it-IT')} €${o.libera ? ' + offerte libere' : ''}</small></div>`).join('')}</div>
+      <p class="muted admin-nota">È la cifra scelta prima di andare su PayPal, non quella pagata: «circa» somma solo le cifre fisse. Le offerte arrivate davvero le vedi nel conto PayPal.</p>`;
+  }
+
   async function statistiche(corpo) {
     const s = await api('GET', '/admin/statistiche');
     const giorni = Object.entries(s.giorni).sort((a, b) => a[0].localeCompare(b[0])).slice(-30);
@@ -218,6 +235,7 @@
           .map(([n, v, c]) => `<div class="admin-numero" style="--c:${c}"><b data-n="${v}">0</b><span>${n}</span></div>`).join('')}</div>
       <h2 class="reparto">Offrimi un caffè</h2>
       <div class="admin-numeri">${caffe(s)}</div>
+      ${importiScelti(s)}
       <p class="muted admin-nota" style="margin-top:12px">Clic sul pulsante e passaggi al sito di pagamento. Se una persona ci clicca più volte in mezz'ora conta una volta sola; i tuoi clic mentre sei collegato qui non contano. Quanto è stato offerto davvero lo vedi solo nel tuo conto PayPal.</p>
       <h2 class="reparto">Ultimi 30 giorni</h2>
       ${giorni.length ? `<div class="admin-grafico">${giorni.map(([d, g]) => `<div class="colonna" title="${d}: ${g.qr} da QR, ${g.visita} altre visite, ${g.lettura} letture">
