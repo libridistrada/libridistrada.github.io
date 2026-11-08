@@ -324,9 +324,16 @@ html.leggero body { background: #0b0b0d; }
 .avvisi-ico svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
 .avvisi.on .avvisi-ico { background: rgba(61, 220, 151, .14); color: #3ddc97; }
 .avvisi .btn { flex: none; }
-@media (max-width: 420px) { .avvisi { flex-wrap: wrap; } .avvisi p { flex-basis: calc(100% - 56px); } .avvisi .btn { margin-left: 56px; } }
+@media (max-width: 420px) { .avvisi { flex-wrap: wrap; } .avvisi p { flex-basis: calc(100% - 56px); } }
 /* modo leggero: senza sfocatura le barre e i riquadri sopra la pagina diventano pieni, così sotto non si legge niente */
 html.leggero .nav.solida, html.leggero .links, html.leggero .cerca { background: #0b0b0d; }
 html.leggero .scheda { background: rgba(0, 0, 0, .9); }
 html.leggero .avviso { background: #2a2416; }
 html.leggero .piede { background-color: #0b0b0d; }
+
+.avvisi-bottoni { flex: none; display: flex; align-items: center; gap: 12px; }
+.avvisi-bottoni .link, .avvisi-riga .link { color: var(--muted, #9a978f); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.avvisi-riga { display: flex; align-items: center; gap: 8px; margin: 40px 0 0; font-size: 13px; color: var(--muted, #9a978f); flex-wrap: wrap; }
+.avvisi-riga svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; flex: none; }
+.avvisi-riga.on svg { color: #3ddc97; }
+@media (max-width: 420px) { .avvisi-bottoni { margin-left: 56px; } }

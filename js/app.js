@@ -416,7 +416,8 @@
       ${h2('Salvati sul telefono', salvati.length)}
       ${salvati.length ? `<div class="griglia">${salvati.map(b => tessera(b, o)).join('')}</div>`
         : '<div class="vuoto"><b>Nessun libro salvato</b>Apri un libro e premi «Salva» per leggerlo anche offline.</div>'}
-      <p class="muted" style="margin-top:36px;font-size:13px">Per averla come un'app: su iPhone Condividi → «Aggiungi alla schermata Home»; su Android ⋮ → «Installa app».</p></div>`;
+      <div data-avvisi-riga></div>
+      <p class="muted" style="margin-top:14px;font-size:13px">Per averla come un'app: su iPhone Condividi → «Aggiungi alla schermata Home»; su Android ⋮ → «Installa app».</p></div>`;
   }
 
   // ---------------------------------------------------------------- scheda del libro
