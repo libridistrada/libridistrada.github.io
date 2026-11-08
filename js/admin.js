@@ -263,7 +263,13 @@
     const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
     const max = Math.max(1, ...Object.values(r.mesi).map(m => m.centesimi));
     const oggi = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
-    box.innerHTML = `<div class="admin-numeri"><div class="admin-numero" style="--c:#3ddc97"><b>${euro(r.totale)}</b><span>Totale ricevuto</span><small>${r.n} offert${r.n === 1 ? 'a' : 'e'}</small></div></div>
+    const perc = r.obiettivo ? Math.min(100, r.questo_mese / r.obiettivo * 100) : 0;
+    box.innerHTML = `<div class="admin-numeri"><div class="admin-numero" style="--c:#3ddc97"><b>${euro(r.totale)}</b><span>Totale ricevuto</span><small>${r.n} offert${r.n === 1 ? 'a' : 'e'}</small></div>
+        <div class="admin-numero" style="--c:#ffbe0b"><b>${euro(r.questo_mese)}</b><span>Questo mese${r.obiettivo ? ` su ${euro(r.obiettivo)}` : ''}</span>
+          ${r.obiettivo ? `<div class="obiettivo-barra"><i style="width:${perc.toFixed(1)}%"></i></div><small>${perc >= 100 ? 'Obiettivo raggiunto!' : `${Math.round(perc)}% dell'obiettivo · mancano ${euro(r.obiettivo - r.questo_mese)}`}</small>` : '<small>Nessun obiettivo impostato</small>'}</div></div>
+      <form class="obiettivo-form modulo" id="fob"><label>Obiettivo del mese in euro <small>(privato: lo vedi solo tu qui)</small>
+        <input name="importo" inputmode="decimal" value="${r.obiettivo ? String(r.obiettivo / 100).replace('.', ',') : ''}" placeholder="es. 20"></label>
+        <button class="btn secondario piccolo" type="submit">Salva obiettivo</button></form>
       ${Object.keys(r.mesi).length ? `<div class="admin-importi" style="margin-top:14px">${Object.entries(r.mesi).map(([m, v]) => `<div><span>${MESI[+m.slice(5) - 1]} ${m.slice(0, 4)}</span>
         <i style="--w:${(v.centesimi / max * 100).toFixed(1)}%;background:linear-gradient(90deg,#3ddc97,#2ec4b6)"></i><b>${euro(v.centesimi)}</b></div>`).join('')}</div>` : ''}
       <form class="modulo offerta-nuova" id="fo">
@@ -276,6 +282,11 @@
       ${r.voci.length ? `<div class="admin-tabella admin-offerte">${r.voci.map(v => `<div><span>${esc(v.data.split('-').reverse().join('/'))}</span>
         <b>${euro(v.centesimi)} · ${esc(r.metodi[v.metodo] || v.metodo)}</b><em>${esc(v.nota || '')}</em>
         <small><button class="link" data-elimina="${esc(v.id)}">Elimina</button></small></div>`).join('')}</div>` : '<p class="muted">Nessuna offerta registrata: aggiungi la prima qui sopra.</p>'}`;
+    box.querySelector('#fob').onsubmit = async e => {
+      e.preventDefault();
+      try { await api('POST', '/admin/offerte', { azione: 'obiettivo', importo: e.target.importo.value }); L.toast('Obiettivo salvato'); registroOfferte(box); }
+      catch (err) { L.toast(err.message); }
+    };
     const f = box.querySelector('#fo');
     f.onsubmit = async e => {
       e.preventDefault();

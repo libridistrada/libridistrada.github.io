@@ -174,3 +174,8 @@
 .admin-offerte em { grid-column: 2; }
 @media (max-width: 760px) { .offerta-nuova { grid-template-columns: 1fr 1fr; } .offerta-nuova .btn { grid-column: 1 / -1; } }
 @media (max-width: 420px) { .offerta-nuova { grid-template-columns: 1fr; } .admin-offerte > div { grid-template-columns: minmax(0, 1fr) auto; } .admin-offerte span { grid-column: 1; } .admin-offerte b, .admin-offerte em { grid-column: 1; } .admin-offerte small { grid-column: 2; grid-row: 1 / 4; } }
+
+.obiettivo-barra { height: 10px; border-radius: 5px; background: rgba(255, 255, 255, .08); margin: 10px 0 2px; overflow: hidden; }
+.obiettivo-barra i { display: block; height: 100%; background: linear-gradient(90deg, #ffbe0b, #3ddc97); border-radius: 5px; }
+.obiettivo-form { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin: 12px 0 4px; }
+.obiettivo-form label { flex: 1 1 220px; }
